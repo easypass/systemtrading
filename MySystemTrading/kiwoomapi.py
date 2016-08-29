@@ -3,8 +3,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.QAxContainer import *
 import time
-import pandas as pd
-import sqlite3
+
 
 class KiwoomApi(QAxWidget):
     def __init__(self):

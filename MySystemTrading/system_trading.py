@@ -3,9 +3,13 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 #from kiwoomapi import *
 import kiwoomapi
+import pandas as pd
+import sqlite3
 
 from PyQt4 import uic
-form_class = uic.loadUiType("./QtUI/MainUI.ui")[0]
+
+form_class = uic.loadUiType("D:\workspace\GitHub\systemtrading\MySystemTrading\QtUI\MainUI.ui")[0]
+#form_class = uic.loadUiType("./QtUI/MainUI.ui")[0]
 
 #class MyWindow(QMainWindow):
 class MyWindow(QMainWindow, form_class):

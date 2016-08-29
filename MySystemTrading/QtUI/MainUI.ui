@@ -13,10 +13,6 @@
   <property name="windowTitle">
    <string>PySystemTrader V0.1</string>
   </property>
-  <property name="windowIcon">
-   <iconset>
-    <normaloff>C:/Users/sungbin.na/Downloads/38f76ba34385ceb13de0160770d09600-Chart.ico</normaloff>C:/Users/sungbin.na/Downloads/38f76ba34385ceb13de0160770d09600-Chart.ico</iconset>
-  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label">
     <property name="geometry">

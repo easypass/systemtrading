@@ -36,7 +36,7 @@ class MyWindow(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-
+        self.code = "030200"
 #       self.kiwoom = KiwoomApi()
         self.kiwoom = kiwoomapi.KiwoomApi()
         self.kiwoom.CommConnect()
@@ -45,6 +45,11 @@ class MyWindow(QMainWindow, form_class):
         self.timer_1sec = QTimer(self)
         self.timer_1sec.start(1000)
         self.timer_1sec.timeout.connect(self.timeout_1sec)
+
+        # Timer 5sec
+        self.timer_5sec = QTimer(self)
+        self.timer_5sec.start(5000)
+        self.timer_5sec.timeout.connect(self.timeout_5sec)
 
         # Timer 10sec
         self.timer_10sec = QTimer(self)
@@ -57,6 +62,16 @@ class MyWindow(QMainWindow, form_class):
         self.pushButton_Order.clicked.connect(self.send_order)
         self.pushButton_GetBalanceInfo.clicked.connect(self.check_balance)
         self.pushButton_Check.clicked.connect(self.check)
+
+        self.checkBox_RealTime_codeinfo.clicked.connect(self.check_realtime_codeinfo)
+
+    def check_realtime_codeinfo(self):
+        self.kiwoom.Init_RealType_Data()
+
+        if self.checkBox_RealTime_codeinfo.isChecked() == True:
+            self.kiwoom.SetRealReg("0101", self.code, "10;11;12;30;228", 0)
+        else:
+            self.kiwoom.SetRealRemove("0101", self.code)
 
 
     # 1 sec timer callback
@@ -72,6 +87,13 @@ class MyWindow(QMainWindow, form_class):
             state_msg = "서버 미 연결 중"
         self.statusbar.showMessage(state_msg + " | " + time_msg)
 
+    # 5 sec timer callback
+    def timeout_5sec(self):
+        if self.checkBox_RealTime_codeinfo.isChecked() == True:
+            self.textEdit_Terminal_RealTime.clear()
+            self.textEdit_Terminal_RealTime.append(self.kiwoom.RealData)
+
+
     # 10 sec timer callback
     def timeout_10sec(self):
         if self.checkBox_RealTime.isChecked() == True:
@@ -79,8 +101,8 @@ class MyWindow(QMainWindow, form_class):
 
     # code 변경시 자동 종목명 검색 및 표시
     def code_changed(self):
-        code = self.lineEdit_Code.text()
-        code_name = self.kiwoom.GetMasterCodeName(code)
+        self.code = self.lineEdit_Code.text()
+        code_name = self.kiwoom.GetMasterCodeName(self.code)
         self.lineEdit_CodeName.setText(code_name)
 
     def send_order(self):
@@ -103,7 +125,7 @@ class MyWindow(QMainWindow, form_class):
         self.comboBox_Account.addItems(accounts_list)
 
     def check_balance(self):
-        self.kiwoom.init_opw00018_data()
+        self.kiwoom.Init_opw00018_data()
         account = self.comboBox_Account.currentText()
 
         # Request opw00018

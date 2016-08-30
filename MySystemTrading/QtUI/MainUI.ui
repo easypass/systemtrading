@@ -368,7 +368,7 @@
       <x>260</x>
       <y>50</y>
       <width>531</width>
-      <height>291</height>
+      <height>141</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -389,6 +389,35 @@
     </property>
     <property name="text">
      <string>조회</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_RealTime_codeinfo">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>24</y>
+      <width>111</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>실시간 조회</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEdit_Terminal_RealTime">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>200</y>
+      <width>531</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:rgb(175, 175, 175)</string>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>

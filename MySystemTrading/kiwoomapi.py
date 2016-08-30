@@ -86,10 +86,10 @@ class KiwoomApi(QAxWidget):
 
         # opt10001_req - 주식기본정보
         if RQName == "opt10001_req":
-            self.code = self.dynamicCall("CommGetData(QString, QString, QString, int, QString)", TrCode, "", RQName, 0, "종목명")
-            self.volume = self.dynamicCall("CommGetData(QString, QString, QString, int, QString)", TrCode, "", RQName, 0, "거래량")
-            self.price = self.dynamicCall("CommGetData(QString, QString, QString, int, QString)", TrCode, "", RQName, 0, "현재가")
-            self.pbr = self.dynamicCall("CommGetData(QString, QString, QString, int, QString)", TrCode, "", RQName, 0, "PBR")
+            self.code = self.CommGetData(TrCode, "", RQName, 0, "종목명")
+            self.volume = self.CommGetData(TrCode, "", RQName, 0, "거래량")
+            self.price = self.CommGetData(TrCode, "", RQName, 0, "현재가")
+            self.pbr = self.CommGetData(TrCode, "", RQName, 0, "PBR")
 
         # 예수금 현황 상세 정보 요청 : 예수금 현황
         if RQName == "opw00001_req":
@@ -172,8 +172,10 @@ class KiwoomApi(QAxWidget):
     # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
     def OnReceiveRealData(self, sJongmokCode, sRealType, sRealData):
         print("OnReceiveRealData", "(",sJongmokCode, sRealType, sRealData, ")")
-        if sRealType == "주식시세":
-            pass
+        print(sJongmokCode)
+        print(sRealType)
+        print(sRealData)
+        self.RealData.append(sRealData)
 
     # void OnReceiveMsg(LPCTSTR sScrNo, LPCTSTR sRQName, LPCTSTR sTrCode, LPCTSTR sMsg)
     def OnReceiveMsg(self, sRQName, sTrCode, sMsg):
@@ -211,15 +213,26 @@ class KiwoomApi(QAxWidget):
 
     #
     def CommRqData(self, sRQName, sTRCode, nPrevNext, sScreenNo):
+        print("OnReceiveChejanData", "(", sRQName, sTRCode, nPrevNext, sScreenNo, ")")
         self.dynamicCall("CommRqData(QString, QString, int, QString)", sRQName, sTRCode, nPrevNext, sScreenNo)
         self.tr_event_loop = QEventLoop()
         self.tr_event_loop.exec_()
 
     #
+    # 1 Tran 데이터  ===  sJongmokCode : Tran명,  sRealType : 사용안함, sFieldName : 레코드명, nIndex : 반복인덱스, sInnerFieldName: 아이템명
+    # 2 실시간 데이터 === sJongmokCode : Key Code, sRealType : Real Type, sFieldName : Item Index, nIndex : 사용안함, sInnerFieldName:사용안함
+    # 3 체결 데이터  === sJongmokCode : 체결구분, sRealType : “-1”, sFieldName : 사용안함, nIndex : ItemIndex, sInnerFieldName :사용안함
     def CommGetData(self, sJongmokCode, sRealType, sFieldName, nIndex, sInnerFiledName):
         data = self.dynamicCall("CommGetData(QString, QString, QString, int, QString)", sJongmokCode, sRealType,
                                 sFieldName, nIndex, sInnerFiledName)
         return data.strip()
+
+    # 확인 필요...
+    def GetCommData(self, sTrCode, sRecordName, nIndex, sItemName):
+        data = self.dynamicCall("GetCommData(QString, QString, long, QString)", sTrCode, sRecordName,
+                                nIndex, sItemName)
+        return data.strip()
+
 
     # LONG SendOrder( BSTR sRQName, BSTR sScreenNo, BSTR sAccNo, LONG nOrderType, BSTR sCode, LONG nQty, LONG nPrice, BSTR sHogaGb,BSTR sOrgOrderNo)
     # nOrderType : (1:신규매수, 2:신규매도, 3:매수취소, 4:매도취소, 5:매수정정, 6:매도정정)
@@ -262,10 +275,71 @@ class KiwoomApi(QAxWidget):
         ret = self.dynamicCall("GetLoginInfo(QString)", info)
         return ret
 
+    # sScrNo : Screen 번호, sCodeList : 실시간 등록할 종목 코드 (복수 가능 - "종목1;종목2;....")
+    # sFidList : 실시간 등록할 FID ("fid1;fid2;fid3.........")
+    # sRealType : 0 - 마지막 등록된 코드만 실시간, 1 - 같은 화면에서 다른종목 추가시 같이 실시간 받음 (추가 개념임)
+    def SetRealReg(self, sScrNo, sCodeList, sFidList, sRealType):
+        ret = self.dynamicCall("SetRealReg(QString, QString, QString, QString)", sScrNo, sCodeList, sFidList, sRealType)
+        return ret
+
+    # sScrNo : Screen 번호, sDelCode : 실시간 해제할 종목
+    def SetRealRemove(self, sScrNo, sDelCode):
+        ret = self.dynamicCall("SetRealRemove(QString, QString)", sScrNo, sDelCode)
+        return ret
+
     #
     def InitOHLCRawData(self):
         self.ohlc = {'date': [], 'open': [], 'high': [], 'low': [], 'close': []}
 
     #
-    def init_opw00018_data(self):
+    def Init_opw00018_data(self):
         self.data_opw00018 = {'single': [], 'multi': [] }
+
+    #
+    def Init_RealType_Data(self):
+        self.RealData = []
+
+
+'''
+FID  설명
+10  현재가, 체결가, 실시간종가
+11  전일 대비
+12  등락율
+27  (최우선)매도호가
+28  (최우선)매수호가
+13  누적거래량, 누적첵ㄹ량
+14  누적거래대금
+16  시가
+17  고가
+18  저가
+25  전일대비기호
+26  전일거래량 대비(계약,주)
+29  거래대금 증감
+30  전일거래량 대비(비율)
+31  거래회전율
+32  거래비용
+311 시가총액(억)
+
+20  체결시간 (HHMMSS)
+10  현재가, 체결가, 실시간종가
+11  전일 대비
+12  등락율
+27  (최우선)매도호가
+28  (최우선)매수호가
+15  거래량, 체결량
+13  누적거래량, 누적체결량
+14  누적거래대금
+16  시가
+17  고가
+18  저가
+25  전일대비 기호
+26  전일거래량 대비(계약, 주)
+29  거래대금 증감
+30  전일거래량 대비(비율)
+31  거래회전율
+32  거래비용
+228 체결강도
+311 시가총액(억)
+290 장구분
+691 K,O 접근도 (ELW조기종료발생 기준가격, 지수)
+'''

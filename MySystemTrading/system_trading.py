@@ -1,12 +1,32 @@
+import os
 import sys
+import threading
+import datetime
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from PyQt4 import uic
+
 #from kiwoomapi import *
 import kiwoomapi
-import pandas as pd
+
+import pymysql
 import sqlite3
 
-from PyQt4 import uic
+import pandas as pd
+from pandas import Series, DataFrame
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+import pandas_datareader.data as web
+
+import pywinauto
+
+
+class Threadjobs(threading.Thread):
+    def run(self):
+        print(threading.currentThread().getName())
+        pass
+
 
 form_class = uic.loadUiType("D:\workspace\GitHub\systemtrading\MySystemTrading\QtUI\MainUI.ui")[0]
 #form_class = uic.loadUiType("./QtUI/MainUI.ui")[0]
@@ -140,8 +160,17 @@ class MyWindow(QMainWindow, form_class):
 
         print(recommend)
 
+    def create_Thread_test(self):
+        # Create Thread
+        joba = Threadjobs(name="joba")
+        joba.start()
+        jobb = Threadjobs(name="jobb")
+        jobb.start()
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = MyWindow()
     myWindow.show()
+    myWindow.create_Thread_test()
     app.exec_()

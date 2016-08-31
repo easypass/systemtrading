@@ -64,14 +64,18 @@ class MyWindow(QMainWindow, form_class):
         self.pushButton_Check.clicked.connect(self.check)
 
         self.checkBox_RealTime_codeinfo.clicked.connect(self.check_realtime_codeinfo)
-
-    def check_realtime_codeinfo(self):
         self.kiwoom.Init_RealType_Data()
 
+
+    def check_realtime_codeinfo(self):
         if self.checkBox_RealTime_codeinfo.isChecked() == True:
-            self.kiwoom.SetRealReg("0101", self.code, "10;11;12;30;228", 0)
+            #self.kiwoom.SetRealReg("0101", self.code, "10;11;12;30;228", 0)
+            self.kiwoom.SetRealReg("0101", self.code, "10", 0)
+            #self.kiwoom.SetRealReg("0101", self.code, "26", 0)
+            #self.kiwoom.SetRealReg("0101", self.code, "26", 0)
         else:
             self.kiwoom.SetRealRemove("0101", self.code)
+            self.kiwoom.Init_RealType_Data()
 
 
     # 1 sec timer callback
@@ -90,14 +94,15 @@ class MyWindow(QMainWindow, form_class):
     # 5 sec timer callback
     def timeout_5sec(self):
         if self.checkBox_RealTime_codeinfo.isChecked() == True:
-            self.textEdit_Terminal_RealTime.clear()
-            self.textEdit_Terminal_RealTime.append(self.kiwoom.RealData)
-
+            #self.textEdit_Terminal_RealTime.clear()
+            #self.textEdit_Terminal_RealTime.append(self.kiwoom.RealData)
+            pass
 
     # 10 sec timer callback
     def timeout_10sec(self):
         if self.checkBox_RealTime.isChecked() == True:
-            self.check_balance()
+            #self.check_balance()
+            pass
 
     # code 변경시 자동 종목명 검색 및 표시
     def code_changed(self):

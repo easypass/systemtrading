@@ -172,10 +172,14 @@ class KiwoomApi(QAxWidget):
     # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
     def OnReceiveRealData(self, sJongmokCode, sRealType, sRealData):
         print("OnReceiveRealData", "(",sJongmokCode, sRealType, sRealData, ")")
-        print(sJongmokCode)
-        print(sRealType)
-        print(sRealData)
-        self.RealData.append(sRealData)
+        data = sRealData.split('\t')
+        #data.insert(0, datetime.datetime.now())
+        now = time.localtime()
+        ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+        data.insert(0, ct)
+        data.insert(0, sRealType)
+        data.insert(0, sJongmokCode)
+        self.RealData.insert(0, data)
 
     # void OnReceiveMsg(LPCTSTR sScrNo, LPCTSTR sRQName, LPCTSTR sTrCode, LPCTSTR sMsg)
     def OnReceiveMsg(self, sRQName, sTrCode, sMsg):

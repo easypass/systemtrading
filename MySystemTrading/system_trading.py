@@ -70,7 +70,7 @@ class MyWindow(QMainWindow, form_class):
     def check_realtime_codeinfo(self):
         if self.checkBox_RealTime_codeinfo.isChecked() == True:
             #self.kiwoom.SetRealReg("0101", self.code, "10;11;12;30;228", 0)
-            self.kiwoom.SetRealReg("0101", self.code, "10", 0)
+            self.kiwoom.SetRealReg("0101", self.code, "10;41;61", 0)
             #self.kiwoom.SetRealReg("0101", self.code, "26", 0)
             #self.kiwoom.SetRealReg("0101", self.code, "26", 0)
         else:
@@ -96,6 +96,7 @@ class MyWindow(QMainWindow, form_class):
         if self.checkBox_RealTime_codeinfo.isChecked() == True:
             #self.textEdit_Terminal_RealTime.clear()
             #self.textEdit_Terminal_RealTime.append(self.kiwoom.RealData)
+            print(self.kiwoom.RealData)
             pass
 
     # 10 sec timer callback

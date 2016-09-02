@@ -22,7 +22,7 @@ import pandas_datareader.data as web
 import pywinauto
 
 
-class Threadjobs(threading.Thread):
+class DBSync_Threadjobs(threading.Thread):
     def run(self):
         print(threading.currentThread().getName())
         pass
@@ -69,10 +69,7 @@ class MyWindow(QMainWindow, form_class):
 
     def check_realtime_codeinfo(self):
         if self.checkBox_RealTime_codeinfo.isChecked() == True:
-            #self.kiwoom.SetRealReg("0101", self.code, "10;11;12;30;228", 0)
-            self.kiwoom.SetRealReg("0101", self.code, "10;41;61", 0)
-            #self.kiwoom.SetRealReg("0101", self.code, "26", 0)
-            #self.kiwoom.SetRealReg("0101", self.code, "26", 0)
+            self.kiwoom.SetRealReg("0101", self.code, "10;121;125", 0)
         else:
             self.kiwoom.SetRealRemove("0101", self.code)
             self.kiwoom.Init_RealType_Data()
@@ -96,14 +93,13 @@ class MyWindow(QMainWindow, form_class):
         if self.checkBox_RealTime_codeinfo.isChecked() == True:
             #self.textEdit_Terminal_RealTime.clear()
             #self.textEdit_Terminal_RealTime.append(self.kiwoom.RealData)
-            print(self.kiwoom.RealData)
+            #print(self.kiwoom.RealData)
             pass
 
     # 10 sec timer callback
     def timeout_10sec(self):
         if self.checkBox_RealTime.isChecked() == True:
-            #self.check_balance()
-            pass
+            self.check_balance()
 
     # code 변경시 자동 종목명 검색 및 표시
     def code_changed(self):
@@ -111,6 +107,7 @@ class MyWindow(QMainWindow, form_class):
         code_name = self.kiwoom.GetMasterCodeName(self.code)
         self.lineEdit_CodeName.setText(code_name)
 
+    # 주식 주문 및 취소
     def send_order(self):
         order_type_lookup = {'신규매수': 1, '신규매도': 2, '매수취소': 3, '매도취소': 4}
         hoga_lookup = {'지정가': "00", '시장가': "03"}
@@ -122,6 +119,7 @@ class MyWindow(QMainWindow, form_class):
         price = self.spinBox_Price.value()
         self.kiwoom.SendOrder("SendOrder_req", "0101", account, order_type_lookup[order_type], code, num, price, hoga_lookup[hoga], "")
 
+    # 계좌정보 얻어오기
     def get_AccountInfo(self):
         user_id = self.kiwoom.GetLoginInfo(["USER_ID"])
         user_name = self.kiwoom.GetLoginInfo(["USER_NAME"])
@@ -130,6 +128,7 @@ class MyWindow(QMainWindow, form_class):
         accounts_list = accounts.split(';')[0:accouns_num]
         self.comboBox_Account.addItems(accounts_list)
 
+    # 계좌 잔고 조회 및 수익율 조회
     def check_balance(self):
         self.kiwoom.Init_opw00018_data()
         account = self.comboBox_Account.currentText()
@@ -175,6 +174,7 @@ class MyWindow(QMainWindow, form_class):
 
         self.tableWidget_DetailCodeInfo.resizeRowsToContents()
 
+    # Kospi 종목 조회
     def check(self):
         recommend = { "1" : [] }
         codelist = []
@@ -188,12 +188,11 @@ class MyWindow(QMainWindow, form_class):
 
         print(recommend)
 
+    # Thread 생성 Test
     def create_Thread_test(self):
         # Create Thread
-        joba = Threadjobs(name="joba")
+        joba = DBSync_Threadjobs(name="joba")
         joba.start()
-        jobb = Threadjobs(name="jobb")
-        jobb.start()
 
 
 if __name__ == "__main__":

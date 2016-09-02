@@ -1,8 +1,11 @@
+import os
+import time
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.QAxContainer import *
-import time
-
+import pandas as pd
+from pandas import Series, DataFrame
+import sqlite3
 
 class KiwoomApi(QAxWidget):
     def __init__(self):
@@ -142,7 +145,6 @@ class KiwoomApi(QAxWidget):
             cnt = self.GetRepeatCnt(TrCode, RQName)
             for i in range(cnt):
                 data = []
-
                 item_name = self.CommGetData(TrCode, "", RQName, i, "종목명")
                 data.append(item_name)
 
@@ -172,19 +174,93 @@ class KiwoomApi(QAxWidget):
     # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
     def OnReceiveRealData(self, sJongmokCode, sRealType, sRealData):
         print("OnReceiveRealData", "(",sJongmokCode, sRealType, sRealData, ")")
-        data = sRealData.split('\t')
-        now = time.localtime()
-        ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
-        data.insert(0, ct)
-        data.insert(0, sRealType)
-        data.insert(0, sJongmokCode)
-        self.RealData.insert(0, data)
+
+        if len(sRealType) == 4 :
+            print("Realtype 1.............")
+            data = sRealData.split('\t')
+            now = time.localtime()
+            ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+            self.timetick.append[ct]
+            #self.RealStockInfo["TickTime"].append(ct)
+            self.RealStockInfo["코드번호"].append(sJongmokCode)
+            self.RealStockInfo["체결번호"].append(data[0])
+            self.RealStockInfo["현재가"].append(data[1])
+            self.RealStockInfo["전일대비"].append(data[2])
+            self.RealStockInfo["등락율"].append(data[3])
+            self.RealStockInfo["매도호가"].append(data[4])
+            self.RealStockInfo["매수호가"].append(data[5])
+            self.RealStockInfo["틱채결량"].append(data[6])
+            self.RealStockInfo["거래량"].append(data[7])
+            self.RealStockInfo["거래대금_백만"].append(data[8])
+            self.RealStockInfo["시가"].append(data[9])
+            self.RealStockInfo["고가"].append(data[10])
+            self.RealStockInfo["저가"].append(data[11])
+            self.RealStockInfo["전일대비부족거래량"].append(data[13])
+            self.RealStockInfo["전일대비거래량비중"].append(data[15])
+            self.RealStockInfo["체결강도"].append(data[18])
+            self.index += 1
+
+        elif len(sRealType) == 6 :
+            print("Realtype 2.............")
+            if (self.index > 1 and data[0] == self.RealStockInfo["체결번호"][self.index-1]) :
+                print("Add 121, 125 info to RealStockInfo['매수,매도총잔량']")
+                selltotal = self.GetCommRealData(sRealType, 121)
+                buytotal = self.GetCommRealData(sRealType, 125)
+                self.RealStockInfo["매도호가총잔량"].append(selltotal)
+                self.RealStockInfo["매수호가총잔량"].append(buytotal)
+        else :
+            print("unknown realtype.............")
+
+        if i >= 200 :
+            filePathName = "D:/workspace/GitHub/systemtrading/MySystemTrading/kospi_"+sJongmokCode+".db"
+            self.saveRealDataToDB(sJongmokCode, filePathName)
+            self.Init_RealType_Data()
+
+
+    def saveRealDataToDB(self, code, filePathName):
+        con = sqlite3.connect(filePathName)
+        col = list(self.RealStockInfo.keys())
+        df_RealStockInfo = DataFrame(self.RealStockInfo, columns = col, index = self.timetick)
+        # 파라미터	설명
+        # name	SQL 테이블 이름으로 파이썬 문자열로 형태로 나타낸다.
+        # con	Cursor 객체
+        # flavor	사용한 DBMS를 지정할 수 있는데 ‘sqlite’ 또는 ‘mysql’을 사용할 수 있다. 기본값은 ‘sqlite’이다.
+        # schema	Schema를 지정할 수 있는데 기본값은 None이다.
+        # if_exists	‘fail’, ‘replace’, ‘append’ 중 하나를 사용할 수 있는데 기본값은 ‘fail’이다. ‘fail’은 데이터베이스에 테이블이 존재하는 경우 아무 동작도 수행하지 않는다. ‘replace’는 테이블이 존재하면 기존 테이블을 삭제하고 새로 테이블을 생성한 후 데이터를 삽입한다. ‘append’는 테이블이 존재하면 데이터만을 추가한다.
+        # index	DataFrame의 index를 데이터베이스에 칼럼으로 추가할지에 대한 여부를 지정한다. 기본값은 True이다.
+        # index_label	인덱스 칼럼에 대한 라벨을 지정할 수 있다. 기본값은 None이다.
+        # chunksize	한 번에 써지는 로우의 크기를 정숫값으로 지정할 수 있다. 기본값은 None으로 DataFrame 내의 모든 로우가 한 번에 써진다.
+        # dtype	칼럼에 대한 SQL 타입을 파이썬 딕셔너리로 넘겨줄 수 있다.
+        df_RealStockInfo.to_sql(code, con, flavor='sqlite', schema=None, if_exists='append', index=True, index_label=None, chunksize=None, dtype=None)
+
+        #cursor = con.cursor()
+        #str	str	long	int	int	float	int	int	int	long	long	int	int	int	long	float	float	long	long
+        #time	종목코드	ID	현재가	전일대비	등락율	매도호가	매수호가	채결량(틱)	거래량	거래대금(백만)	시가	고가	저가	전일대비 부족거래양	전일대비거래량비중	당일채결강도	매도호가 총잔량	매수호가 총잔량
+        #cursor.execute("CREATE TABLE stockInfo(시간 text, 종목코드 text, id int, 현재가 int, 전일대비 int, 등락율 float, 매도호가 int, 매수호가 int, 채결량틱 int, 거래량 int, 거래대금_백만 int, 시가 int, 고가 int, 저가 int, 전일대비부족거래량 int, 전일대비거래량비중 int, 체결강도 float, 매도호가총잔량 int, 매수호가총잔량 int )")
+        #cursor.execute("INSERT INTO stockInfo VALUES('16.06.04', '030200', '122234', 97000, 98600, 96900, 98000, 0, 321405, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)")
+        #con.commit()
+        con.close()
+
+        #PATH = ""
+        #os.path.exists("")
+        #os.path.isdir("")
+        #os.path.isfile("")
+
+    def readRealDataFromDB(self, filename, tablename):
+        cmd = 'SELECT * FROMM %s' % tablename
+        df_RealStockInfo = pd.read_sql(cmd, con, index_col='index')
+        return df_RealStockInfo
+        #con = sqlite3.connect(filePathName)
+        #cursor = con.cursor()
+        #cmd = 'SELECT * FROMM %s' % tablename
+        #cursor.execute(cmd)
+        #cursor.fetchone()
+        #cursor.fetchall()
 
     # void OnReceiveMsg(LPCTSTR sScrNo, LPCTSTR sRQName, LPCTSTR sTrCode, LPCTSTR sMsg)
     def OnReceiveMsg(self, sRQName, sTrCode, sMsg):
         print("OnReceiveMsg", "(",sRQName, sTrCode, sMsg, ")")
-        if sRQName == "주식기본정보":
-            pass
+        pass
 
     # void OnReceiveChejanData(LPCTSTR sGubun, LONG nItemCnt, LPCTSTR sFidList);
     # FID	설명
@@ -234,6 +310,11 @@ class KiwoomApi(QAxWidget):
     def GetCommData(self, sTrCode, sRecordName, nIndex, sItemName):
         data = self.dynamicCall("GetCommData(QString, QString, long, QString)", sTrCode, sRecordName,
                                 nIndex, sItemName)
+        return data.strip()
+
+    # 확인 필요...
+    def GetCommRealData(self, sRealType, nFid):
+        data = self.dynamicCall("GetCommRealData(QString, long)", sRealType, nFid)
         return data.strip()
 
 
@@ -300,8 +381,27 @@ class KiwoomApi(QAxWidget):
 
     #
     def Init_RealType_Data(self):
-        self.RealData = []
-
+        self.index = 0
+        self.timetick = []
+        self.RealStockInfo = { #"TickTime" : [],
+                    "코드번호" : [],
+                    "체결번호" : [],
+                    "현재가" : [],
+                    "전일대비" : [],
+                    "등락율" : [],
+                    "매도호가" : [],
+                    "매수호가" : [],
+                    "틱채결량" : [],
+                    "거래량" : [],
+                    "거래대금_백만" : [],
+                    "시가" : [],
+                    "고가" : [],
+                    "저가" : [],
+                    "전일대비부족거래량" : [],
+                    "전일대비거래량비중" : [],
+                    "체결강도" : [],
+                    "매도호가총잔량" : [],
+                    "매수호가총잔량" : [] }
 
 '''
 FID  설명

@@ -86,13 +86,52 @@ class KiwoomApi(QAxWidget):
     def OnReceiveTrData(self, ScrNo, RQName, TrCode, RecordName, PrevNext, DataLength, ErrorCode, Message, SplmMsg):
         print("OnReceiveTrData", "(", ScrNo, RQName, TrCode, RecordName, PrevNext, DataLength, ErrorCode, Message, SplmMsg, ")")
         self.prev_next = PrevNext
-
+        print("PreNext = ", self.prev_next)
         # opt10001_req - 주식기본정보
         if RQName == "opt10001_req":
-            self.code = self.CommGetData(TrCode, "", RQName, 0, "종목명")
-            self.volume = self.CommGetData(TrCode, "", RQName, 0, "거래량")
-            self.price = self.CommGetData(TrCode, "", RQName, 0, "현재가")
-            self.pbr = self.CommGetData(TrCode, "", RQName, 0, "PBR")
+            self.opt10001_data["종목코드"] = self.CommGetData(TrCode, "", RQName, 0, "종목코드")
+            self.opt10001_data["종목명"] = self.CommGetData(TrCode, "", RQName, 0, "종목명")
+            self.opt10001_data["결산월"] = self.CommGetData(TrCode, "", RQName, 0, "결산월")
+            self.opt10001_data["액면가"] = self.CommGetData(TrCode, "", RQName, 0, "액면가")
+            self.opt10001_data["자본금"] = self.CommGetData(TrCode, "", RQName, 0, "자본금")
+            self.opt10001_data["상장주식"] = self.CommGetData(TrCode, "", RQName, 0, "상장주식")
+            self.opt10001_data["신용비율"] = self.CommGetData(TrCode, "", RQName, 0, "신용비율")
+            self.opt10001_data["연중최고"] = self.CommGetData(TrCode, "", RQName, 0, "연중최고")
+            self.opt10001_data["연중최저"] = self.CommGetData(TrCode, "", RQName, 0, "연중최저")
+            self.opt10001_data["시가총액"] = self.CommGetData(TrCode, "", RQName, 0, "시가총액")
+            self.opt10001_data["외진소진률"] = self.CommGetData(TrCode, "", RQName, 0, "외진소진률")
+            self.opt10001_data["대용가"] = self.CommGetData(TrCode, "", RQName, 0, "대용가")
+            self.opt10001_data["PER"] = self.CommGetData(TrCode, "", RQName, 0, "PER")
+            self.opt10001_data["EPS"] = self.CommGetData(TrCode, "", RQName, 0, "EPS")
+            self.opt10001_data["ROE"] = self.CommGetData(TrCode, "", RQName, 0, "ROE")
+            self.opt10001_data["PBR"] = self.CommGetData(TrCode, "", RQName, 0, "PBR")
+            self.opt10001_data["EV"] = self.CommGetData(TrCode, "", RQName, 0, "EV")
+            self.opt10001_data["BPS"] = self.CommGetData(TrCode, "", RQName, 0, "BPS")
+            self.opt10001_data["매출액"] = self.CommGetData(TrCode, "", RQName, 0, "매출액")
+            self.opt10001_data["영업이익"] = self.CommGetData(TrCode, "", RQName, 0, "영업이익")
+            self.opt10001_data["당기순이익"] = self.CommGetData(TrCode, "", RQName, 0, "당기순이익")
+            self.opt10001_data["250최고"] = self.CommGetData(TrCode, "", RQName, 0, "250최고")
+            self.opt10001_data["250최저"] = self.CommGetData(TrCode, "", RQName, 0, "250최저")
+            self.opt10001_data["시가"] = self.CommGetData(TrCode, "", RQName, 0, "시가")
+            self.opt10001_data["고가"] = self.CommGetData(TrCode, "", RQName, 0, "고가")
+            self.opt10001_data["저가"] = self.CommGetData(TrCode, "", RQName, 0, "저가")
+            self.opt10001_data["상한가"] = self.CommGetData(TrCode, "", RQName, 0, "상한가")
+            self.opt10001_data["하한가"] = self.CommGetData(TrCode, "", RQName, 0, "하한가")
+            self.opt10001_data["기준가"] = self.CommGetData(TrCode, "", RQName, 0, "기준가")
+            self.opt10001_data["예상체결가"] = self.CommGetData(TrCode, "", RQName, 0, "예상체결가")
+            self.opt10001_data["예상체결수량"] = self.CommGetData(TrCode, "", RQName, 0, "예상체결수량")
+            self.opt10001_data["250최고가일"] = self.CommGetData(TrCode, "", RQName, 0, "250최고가일")
+            self.opt10001_data["250최저가일"] = self.CommGetData(TrCode, "", RQName, 0, "250최저가일")
+            self.opt10001_data["250최고가대비율"] = self.CommGetData(TrCode, "", RQName, 0, "250최고가대비율")
+            self.opt10001_data["현재가"] = self.CommGetData(TrCode, "", RQName, 0, "현재가")
+            self.opt10001_data["대비기호"] = self.CommGetData(TrCode, "", RQName, 0, "대비기호")
+            self.opt10001_data["전일대비"] = self.CommGetData(TrCode, "", RQName, 0, "전일대비")
+            self.opt10001_data["등락율"] = self.CommGetData(TrCode, "", RQName, 0, "등락율")
+            self.opt10001_data["거래량"] = self.CommGetData(TrCode, "", RQName, 0, "거래량")
+            self.opt10001_data["거래대비"] = self.CommGetData(TrCode, "", RQName, 0, "거래대비")
+            self.opt10001_data["액면가단위"] = self.CommGetData(TrCode, "", RQName, 0, "액면가단위")
+            #print(self.opt10001_data)
+            pass
 
         # 예수금 현황 상세 정보 요청 : 예수금 현황
         if RQName == "opw00001_req":
@@ -100,20 +139,29 @@ class KiwoomApi(QAxWidget):
             estimated_day2_deposit = self.change_format(estimated_day2_deposit)
             self.data_opw00001 = estimated_day2_deposit
 
-        #
+        # 주식 일봉챠트 조회
         if RQName == "opt10081_req":
             cnt = self.GetRepeatCnt(TrCode, RQName)
             for i in range(cnt):
-                date = self.CommGetData(TrCode, "", RQName, i, "일자")
-                open = self.CommGetData(TrCode, "", RQName, i, "시가")
-                high = self.CommGetData(TrCode, "", RQName, i, "고가")
-                low  = self.CommGetData(TrCode, "", RQName, i, "저가")
-                close  = self.CommGetData(TrCode, "", RQName, i, "현재가")
-                self.ohlc['date'].append(date)
-                self.ohlc['open'].append(int(open))
-                self.ohlc['high'].append(int(high))
-                self.ohlc['low'].append(int(low))
-                self.ohlc['close'].append(int(close))
+                if i == 0 :
+                    self.DailyChartInfo["종목코드"] = self.CommGetData(TrCode, "", RQName, i, "종목코드")
+                self.DailyChartInfo["일자"].append(self.CommGetData(TrCode, "", RQName, i, "일자"))
+                self.DailyChartInfo["현재가"].append(int(self.CommGetData(TrCode, "", RQName, i, "현재가")))
+                self.DailyChartInfo["시가"].append(int(self.CommGetData(TrCode, "", RQName, i, "시가")))
+                self.DailyChartInfo["고가"].append(int(self.CommGetData(TrCode, "", RQName, i, "고가")))
+                self.DailyChartInfo["저가"].append(int(self.CommGetData(TrCode, "", RQName, i, "저가")))
+                self.DailyChartInfo["거래량"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래량")))
+                self.DailyChartInfo["거래대금"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래대금")))
+                #self.DailyChartInfo["수정주가구분"].append((self.CommGetData(TrCode, "", RQName, i, "수정주가구분")))
+                #self.DailyChartInfo["수정비율"].append((self.CommGetData(TrCode, "", RQName, i, "수정비율")))
+                #self.DailyChartInfo["대업종구분"].append((self.CommGetData(TrCode, "", RQName, i, "대업종구분")))
+                #self.DailyChartInfo["소업종구분"].append((self.CommGetData(TrCode, "", RQName, i, "소업종구분")))
+                #self.DailyChartInfo["종목정보"].append((self.CommGetData(TrCode, "", RQName, i, "종목정보")))
+                #self.DailyChartInfo["수정주가이벤트"].append((self.CommGetData(TrCode, "", RQName, i, "수정주가이벤트")))
+                #self.DailyChartInfo["전일종가"].append((self.CommGetData(TrCode, "", RQName, i, "전일종가")))
+            print("count=", cnt)
+            print(self.DailyChartInfo)
+
 
         # 계좌평가 잔고내역 : 잔고 및 보유종목 현황
         if RQName == "opw00018_req":
@@ -182,7 +230,7 @@ class KiwoomApi(QAxWidget):
             ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
             self.timetick.append[ct]
             #self.RealStockInfo["TickTime"].append(ct)
-            self.RealStockInfo["코드번호"].append(sJongmokCode)
+            self.RealStockInfo["종목코드"].append(sJongmokCode)
             self.RealStockInfo["체결번호"].append(data[0])
             self.RealStockInfo["현재가"].append(data[1])
             self.RealStockInfo["전일대비"].append(data[2])
@@ -383,26 +431,89 @@ class KiwoomApi(QAxWidget):
     def Init_RealType_Data(self):
         self.index = 0
         self.timetick = []
-        self.RealStockInfo = { #"TickTime" : [],
-                    "코드번호" : [],
-                    "체결번호" : [],
-                    "현재가" : [],
-                    "전일대비" : [],
-                    "등락율" : [],
-                    "매도호가" : [],
-                    "매수호가" : [],
-                    "틱채결량" : [],
-                    "거래량" : [],
-                    "거래대금_백만" : [],
-                    "시가" : [],
-                    "고가" : [],
-                    "저가" : [],
-                    "전일대비부족거래량" : [],
-                    "전일대비거래량비중" : [],
-                    "체결강도" : [],
-                    "매도호가총잔량" : [],
-                    "매수호가총잔량" : [] }
+        self.RealStockInfo = {
+            "종목코드" : [],
+            "체결번호" : [],
+            "현재가" : [],
+            "전일대비" : [],
+            "등락율" : [],
+            "매도호가" : [],
+            "매수호가" : [],
+            "틱채결량" : [],
+            "거래량" : [],
+            "거래대금_백만" : [],
+            "시가" : [],
+            "고가" : [],
+            "저가" : [],
+            "전일대비부족거래량" : [],
+            "전일대비거래량비중" : [],
+            "체결강도" : [],
+            "매도호가총잔량" : [],
+            "매수호가총잔량" : [] }
 
+        # 주식 기본정보 Data
+        self.opt10001_data = {
+            "종목코드" : [],
+            "종목명" : [],
+            "결산월" : [],
+            "액면가" : [],
+            "자본금" : [],
+            "상장주식" : [],
+            "신용비율" : [],
+            "연중최고" : [],
+            "연중최저" : [],
+            "시가총액" : [],
+            "시가총액비중" : [],
+            "외진소진률" : [],
+            "대용가" : [],
+            "PER" : [],
+            "EPS" : [],
+            "ROE" : [],
+            "PBR" : [],
+            "EV" : [],
+            "BPS" : [],
+            "매출액" : [],
+            "영업이익" : [],
+            "당기순이익" : [],
+            "250최고" : [],
+            "250최저" : [],
+            "시가" : [],
+            "고가" : [],
+            "저가" : [],
+            "상한가" : [],
+            "하한가" : [],
+            "기준가" : [],
+            "예상체결가" : [],
+            "예상체결수량" : [],
+            "250최고가일" : [],
+            "250최저가일" : [],
+            "250최고가대비율" : [],
+            "250최저가대비율" : [],
+            "현재가" : [],
+            "대비기호" : [],
+            "전일대비" : [],
+            "등락율" : [],
+            "거래량" : [],
+            "거래대비" : [],
+            "액면가단위" : [] }
+
+        # 주식 일봉 차트 조회
+        self.DailyChartInfo = {
+            "종목코드" : [],
+            "일자" : [],
+            "현재가" : [],
+            "시가" : [],
+            "고가" : [],
+            "저가" : [],
+            "거래량" : [],
+            "거래대금" : [],
+            "수정주가구분" : [],
+            "수정비율" : [],
+            "대업종구분" : [],
+            "소업종구분" : [],
+            "종목정보" : [],
+            "수정주가이벤트" : [],
+            "전일종가" : [] }
 '''
 FID  설명
 10  현재가, 체결가, 실시간종가

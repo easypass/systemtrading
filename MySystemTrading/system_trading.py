@@ -105,7 +105,20 @@ class MyWindow(QMainWindow, form_class):
     def code_changed(self):
         self.code = self.lineEdit_Code.text()
         code_name = self.kiwoom.GetMasterCodeName(self.code)
-        self.lineEdit_CodeName.setText(code_name)
+        if len(code_name) > 0 :
+            self.lineEdit_CodeName.setText(code_name)
+            self.kiwoom.Init_RealType_Data()
+            '''
+            # Request opw00001
+            self.kiwoom.SetInputValue("종목코드", self.code)
+            self.kiwoom.CommRqData("opt10001_req", "opt10001", 0, "0101")
+            '''
+            # Request opw00001
+            self.kiwoom.SetInputValue("종목코드", self.code)
+            self.kiwoom.SetInputValue("기준일자", "20160902")
+            self.kiwoom.SetInputValue("수정주가구분", 0)
+            self.kiwoom.CommRqData("opt10081_req", "opt10081", 0, "0101")
+
 
     # 주식 주문 및 취소
     def send_order(self):
@@ -176,17 +189,17 @@ class MyWindow(QMainWindow, form_class):
 
     # Kospi 종목 조회
     def check(self):
-        recommend = { "1" : [] }
-        codelist = []
-        codelist = self.kiwoom.GetCodeListByMarket("0")
+        # init kospi dictionary Data.....
+        kospi = { }
+        codelist = list(self.kiwoom.GetCodeListByMarket("0"))
         cnt = len(codelist)
-        j = 0
         for i in codelist:
             self.textEdit_Terminal.append(i)
-            recommend[i] = []
-            j = j+1
+            kospi[i] = []
 
-        print(recommend)
+        print(kospi)
+
+
 
     # Thread 생성 Test
     def create_Thread_test(self):

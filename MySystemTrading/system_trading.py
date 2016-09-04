@@ -2,6 +2,7 @@ import os
 import sys
 import threading
 import datetime
+import time
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
@@ -20,6 +21,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import pandas_datareader.data as web
 
 import pywinauto
+import win32com.client as win32
 
 
 class DBSync_Threadjobs(threading.Thread):
@@ -119,6 +121,10 @@ class MyWindow(QMainWindow, form_class):
             self.kiwoom.SetInputValue("수정주가구분", 0)
             self.kiwoom.CommRqData("opt10081_req", "opt10081", 0, "0101")
 
+            self.Save_Excelfile("D:\\test_excel.xls")
+            #self.Open_Excelfile("D:\\test_excel.xls")
+
+
 
     # 주식 주문 및 취소
     def send_order(self):
@@ -189,15 +195,46 @@ class MyWindow(QMainWindow, form_class):
 
     # Kospi 종목 조회
     def check(self):
+        self.kiwoom.Init_RealType_Data()
+        excel = win32.gencache.EnsureDispatch('Excel.Application')
+        excel.Visible = True
+        wb = excel.Workbooks.Add()
+        # Add worksheet....
+        ws = wb.Worksheets.Add()
+        ws.Name = "종목정보"
+        # select sheet
+        ws = wb.Worksheets("종목정보")
+        codekeylist = list(self.kiwoom.opt10001_data.keys())
+
+        col = 1;
+        for i in codekeylist:
+            ws.Cells(1, col).Value = str(i)
+            col+=1
+
         # init kospi dictionary Data.....
-        kospi = { }
         codelist = list(self.kiwoom.GetCodeListByMarket("0"))
         cnt = len(codelist)
+        row = 2
         for i in codelist:
-            self.textEdit_Terminal.append(i)
-            kospi[i] = []
+            col = 1
+            #self.textEdit_Terminal.append(i)
+            self.code = i;
+            # Request opw00001
+            self.kiwoom.SetInputValue("종목코드", self.code)
+            self.kiwoom.CommRqData("opt10001_req", "opt10001", 0, "0101")
 
-        print(kospi)
+            for j in codekeylist:
+                if len(self.kiwoom.opt10001_data[j]) > 0 :
+                    data = self.kiwoom.opt10001_data[j]
+                    ws.Cells(row, col).Value = data
+                col+=1
+            row+=1
+            time.sleep(0.5)
+
+        wb.Save(PathName)
+        excel.Application.Quit()
+
+
 
 
 
@@ -207,6 +244,58 @@ class MyWindow(QMainWindow, form_class):
         joba = DBSync_Threadjobs(name="joba")
         joba.start()
 
+
+
+    def Save_Excelfile(self, PathName):
+        # Alternately, you can autofit all rows in the worksheet
+        # ws.Rows.AutoFit()
+        # ws.columns.AutoFit()
+        excel = win32.gencache.EnsureDispatch('Excel.Application')
+        excel.Visible = True
+        wb = excel.Workbooks.Add()
+
+        # select sheet and rename
+        #ws = wb.Worksheets("Sheet1")
+        #ws.Name = "RenameSheet"
+
+        # Add worksheet....
+        ws = wb.Worksheets.Add()
+        ws.Name = "MySheet3"
+        ws = wb.Worksheets.Add()
+        ws.Name = "MySheet2"
+        ws = wb.Worksheets.Add()
+        ws.Name = "MySheet1"
+
+        # select sheet
+        ws = wb.Worksheets("MySheet2")
+
+        # Modify Sheet Data..........
+        ws.Range("A1:A2").Value = "1 line"
+        ws.Rows(1).RowHeight = 60
+        ws.Range("2:2").RowHeight = 120
+        ws.Rows(1).VerticalAlignment = win32.constants.xlCenter
+        ws.Range("2:2").VerticalAlignment = win32.constants.xlCenter
+        ws.Cells(1,1).Value = "ss"
+        ws.Cells(1,1).Interior.ColorIndex = 3
+        wb.Save(PathName)
+        excel.Application.Quit()
+
+    def Open_Excelfile(self, PathName):
+        # Alternately, you can autofit all rows in the worksheet
+        # ws.Rows.AutoFit()
+        # ws.columns.AutoFit()
+        excel = win32.gencache.EnsureDispatch('Excel.Application')
+        excel.Visible = True
+        wb = excel.Workbooks.Open(PathName)
+
+        # Get Active Sheet........
+        #ws = wb.ActiveSheet
+
+        # select Sheet.........
+        ws = wb.Worksheets("MySheet1")
+        ws.Cells(1,15).Value = "sssss"
+        wb.Save()
+        excel.Application.Quit()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

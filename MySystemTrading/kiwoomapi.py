@@ -152,13 +152,15 @@ class KiwoomApi(QAxWidget):
                 self.DailyChartInfo["저가"].append(int(self.CommGetData(TrCode, "", RQName, i, "저가")))
                 self.DailyChartInfo["거래량"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래량")))
                 self.DailyChartInfo["거래대금"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래대금")))
-                #self.DailyChartInfo["수정주가구분"].append((self.CommGetData(TrCode, "", RQName, i, "수정주가구분")))
-                #self.DailyChartInfo["수정비율"].append((self.CommGetData(TrCode, "", RQName, i, "수정비율")))
-                #self.DailyChartInfo["대업종구분"].append((self.CommGetData(TrCode, "", RQName, i, "대업종구분")))
-                #self.DailyChartInfo["소업종구분"].append((self.CommGetData(TrCode, "", RQName, i, "소업종구분")))
-                #self.DailyChartInfo["종목정보"].append((self.CommGetData(TrCode, "", RQName, i, "종목정보")))
-                #self.DailyChartInfo["수정주가이벤트"].append((self.CommGetData(TrCode, "", RQName, i, "수정주가이벤트")))
-                #self.DailyChartInfo["전일종가"].append((self.CommGetData(TrCode, "", RQName, i, "전일종가")))
+                '''
+                self.DailyChartInfo["수정주가구분"].append((self.CommGetData(TrCode, "", RQName, i, "수정주가구분")))
+                self.DailyChartInfo["수정비율"].append((self.CommGetData(TrCode, "", RQName, i, "수정비율")))
+                self.DailyChartInfo["대업종구분"].append((self.CommGetData(TrCode, "", RQName, i, "대업종구분")))
+                self.DailyChartInfo["소업종구분"].append((self.CommGetData(TrCode, "", RQName, i, "소업종구분")))
+                self.DailyChartInfo["종목정보"].append((self.CommGetData(TrCode, "", RQName, i, "종목정보")))
+                self.DailyChartInfo["수정주가이벤트"].append((self.CommGetData(TrCode, "", RQName, i, "수정주가이벤트")))
+                self.DailyChartInfo["전일종가"].append((self.CommGetData(TrCode, "", RQName, i, "전일종가")))
+                '''
             print("count=", cnt)
             print(self.DailyChartInfo)
 
@@ -229,7 +231,6 @@ class KiwoomApi(QAxWidget):
             now = time.localtime()
             ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
             self.timetick.append[ct]
-            #self.RealStockInfo["TickTime"].append(ct)
             self.RealStockInfo["종목코드"].append(sJongmokCode)
             self.RealStockInfo["체결번호"].append(data[0])
             self.RealStockInfo["현재가"].append(data[1])
@@ -453,6 +454,52 @@ class KiwoomApi(QAxWidget):
 
         # 주식 기본정보 Data
         self.opt10001_data = {
+            "종목코드" : '',
+            "종목명" : '',
+            "결산월" : '',
+            "액면가" : '',
+            "자본금" : '',
+            "상장주식" : '',
+            "신용비율" : '',
+            "연중최고" : '',
+            "연중최저" : '',
+            "시가총액" : '',
+            "시가총액비중" : '',
+            "외진소진률" : '',
+            "대용가" : '',
+            "PER" : '',
+            "EPS" : '',
+            "ROE" : '',
+            "PBR" : '',
+            "EV" : '',
+            "BPS" : '',
+            "매출액" : '',
+            "영업이익" : '',
+            "당기순이익" : '',
+            "250최고" : '',
+            "250최저" : '',
+            "시가" : '',
+            "고가" : '',
+            "저가" : '',
+            "상한가" : '',
+            "하한가" : '',
+            "기준가" : '',
+            "예상체결가" : '',
+            "예상체결수량" : '',
+            "250최고가일" : '',
+            "250최저가일" : '',
+            "250최고가대비율" : '',
+            "250최저가대비율" : '',
+            "현재가" : '',
+            "대비기호" : '',
+            "전일대비" : '',
+            "등락율" : '',
+            "거래량" : '',
+            "거래대비" : '',
+            "액면가단위" : '' }
+        '''
+        # 주식 기본정보 Data
+        self.opt10001_data = {
             "종목코드" : [],
             "종목명" : [],
             "결산월" : [],
@@ -496,7 +543,7 @@ class KiwoomApi(QAxWidget):
             "거래량" : [],
             "거래대비" : [],
             "액면가단위" : [] }
-
+        '''
         # 주식 일봉 차트 조회
         self.DailyChartInfo = {
             "종목코드" : [],

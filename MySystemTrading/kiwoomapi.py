@@ -225,42 +225,47 @@ class KiwoomApi(QAxWidget):
     def OnReceiveRealData(self, sJongmokCode, sRealType, sRealData):
         print("OnReceiveRealData", "(",sJongmokCode, sRealType, sRealData, ")")
 
-        if len(sRealType) == 4 :
+        if sRealType == "주식체결" :
             print("Realtype 1.............")
-            data = sRealData.split('\t')
+            self.data = sRealData.split('\t')
             now = time.localtime()
-            ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
-            self.timetick.append[ct]
+            #ct = "%04d-%02d-%02d %02d:%02d:%02d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+            ct = time.monotonic()
+            self.timetick.append(ct)
             self.RealStockInfo["종목코드"].append(sJongmokCode)
-            self.RealStockInfo["체결번호"].append(data[0])
-            self.RealStockInfo["현재가"].append(data[1])
-            self.RealStockInfo["전일대비"].append(data[2])
-            self.RealStockInfo["등락율"].append(data[3])
-            self.RealStockInfo["매도호가"].append(data[4])
-            self.RealStockInfo["매수호가"].append(data[5])
-            self.RealStockInfo["틱채결량"].append(data[6])
-            self.RealStockInfo["거래량"].append(data[7])
-            self.RealStockInfo["거래대금_백만"].append(data[8])
-            self.RealStockInfo["시가"].append(data[9])
-            self.RealStockInfo["고가"].append(data[10])
-            self.RealStockInfo["저가"].append(data[11])
-            self.RealStockInfo["전일대비부족거래량"].append(data[13])
-            self.RealStockInfo["전일대비거래량비중"].append(data[15])
-            self.RealStockInfo["체결강도"].append(data[18])
+            self.RealStockInfo["체결번호"].append(self.data[0])
+            self.RealStockInfo["현재가"].append(self.data[1])
+            self.RealStockInfo["전일대비"].append(self.data[2])
+            self.RealStockInfo["등락율"].append(self.data[3])
+            self.RealStockInfo["매도호가"].append(self.data[4])
+            self.RealStockInfo["매수호가"].append(self.data[5])
+            self.RealStockInfo["틱채결량"].append(self.data[6])
+            self.RealStockInfo["거래량"].append(self.data[7])
+            self.RealStockInfo["거래대금_백만"].append(self.data[8])
+            self.RealStockInfo["시가"].append(self.data[9])
+            self.RealStockInfo["고가"].append(self.data[10])
+            self.RealStockInfo["저가"].append(self.data[11])
+            self.RealStockInfo["전일대비부족거래량"].append(self.data[13])
+            self.RealStockInfo["전일대비거래량비중"].append(self.data[15])
+            self.RealStockInfo["체결강도"].append(self.data[18])
+            self.RealStockInfo["매도호가총잔량"].append(self.data[18])
+            self.RealStockInfo["매수호가총잔량"].append(self.data[18])
             self.index += 1
 
-        elif len(sRealType) == 6 :
+        if sRealType == "주식호가잔량" :
             print("Realtype 2.............")
-            if (self.index > 1 and data[0] == self.RealStockInfo["체결번호"][self.index-1]) :
+            '''
+            if (self.index > 1 and self.data[0] == self.RealStockInfo["체결번호"][self.index-1]) :
                 print("Add 121, 125 info to RealStockInfo['매수,매도총잔량']")
                 selltotal = self.GetCommRealData(sRealType, 121)
                 buytotal = self.GetCommRealData(sRealType, 125)
                 self.RealStockInfo["매도호가총잔량"].append(selltotal)
                 self.RealStockInfo["매수호가총잔량"].append(buytotal)
+            '''
         else :
             print("unknown realtype.............")
 
-        if i >= 200 :
+        if self.index >= 5 :
             filePathName = "D:/workspace/GitHub/systemtrading/MySystemTrading/kospi_"+sJongmokCode+".db"
             self.saveRealDataToDB(sJongmokCode, filePathName)
             self.Init_RealType_Data()
@@ -269,7 +274,11 @@ class KiwoomApi(QAxWidget):
     def saveRealDataToDB(self, code, filePathName):
         con = sqlite3.connect(filePathName)
         col = list(self.RealStockInfo.keys())
+        print(col)
+        print(self.timetick)
+        print(self.RealStockInfo)
         df_RealStockInfo = DataFrame(self.RealStockInfo, columns = col, index = self.timetick)
+        print(df_RealStockInfo)
         # 파라미터	설명
         # name	SQL 테이블 이름으로 파이썬 문자열로 형태로 나타낸다.
         # con	Cursor 객체

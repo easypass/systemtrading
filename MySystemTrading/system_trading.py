@@ -115,14 +115,29 @@ class MyWindow(QMainWindow, form_class):
             self.kiwoom.SetInputValue("종목코드", self.code)
             self.kiwoom.CommRqData("opt10001_req", "opt10001", 0, "0101")
             '''
+
             # Request opw00001
+            '''
             self.kiwoom.SetInputValue("종목코드", self.code)
             self.kiwoom.SetInputValue("기준일자", "20160902")
             self.kiwoom.SetInputValue("수정주가구분", 0)
             self.kiwoom.CommRqData("opt10081_req", "opt10081", 0, "0101")
-
             self.Save_Excelfile("D:\\test_excel.xls")
             #self.Open_Excelfile("D:\\test_excel.xls")
+            '''
+
+            # request 융자 / 대주거래 현황
+            self.kiwoom.SetInputValue("종목코드", self.code)
+            self.kiwoom.SetInputValue("일자", "20160907")
+            self.kiwoom.SetInputValue("조회구분", 1)
+            self.kiwoom.CommRqData("opt10013_req", "opt10013", 0, "0101")
+
+            # request 공매도 현황
+            self.kiwoom.SetInputValue("종목코드", self.code)
+            self.kiwoom.SetInputValue("시간구분", 1)
+            self.kiwoom.SetInputValue("시작일자", "20160101")
+            self.kiwoom.SetInputValue("종료일자", "20160907")
+            self.kiwoom.CommRqData("opt10014_req", "opt10014", 0, "0101")
 
 
 

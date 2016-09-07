@@ -219,7 +219,47 @@ class KiwoomApi(QAxWidget):
                 data.append(earning_rate)
                 self.data_opw00018['multi'].append(data)
 
+
+        # 융자(1) / 대주(2) 현황 조회
+        if RQName == "opt10013_req":
+            cnt = self.GetRepeatCnt(TrCode, RQName)
+            print("opt10013_req count =", cnt)
+            for i in range(cnt):
+                self.ShinyongInfo["일자"].append((self.CommGetData(TrCode, "", RQName, i, "일자")))
+                self.ShinyongInfo["현재가"].append(int(self.CommGetData(TrCode, "", RQName, i, "현재가")))
+                self.ShinyongInfo["전일대비기호"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비기호")))
+                self.ShinyongInfo["전일대비"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비")))
+                self.ShinyongInfo["거래량"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래량")))
+                self.ShinyongInfo["신규"].append(int(self.CommGetData(TrCode, "", RQName, i, "신규")))
+                self.ShinyongInfo["상환"].append(int(self.CommGetData(TrCode, "", RQName, i, "상환")))
+                self.ShinyongInfo["잔고"].append(int(self.CommGetData(TrCode, "", RQName, i, "잔고")))
+                self.ShinyongInfo["금액"].append(int(self.CommGetData(TrCode, "", RQName, i, "금액")))
+                self.ShinyongInfo["대비"].append(int(self.CommGetData(TrCode, "", RQName, i, "대비")))
+                self.ShinyongInfo["공여율"].append(float(self.CommGetData(TrCode, "", RQName, i, "공여율")))
+                self.ShinyongInfo["잔고율"].append(float(self.CommGetData(TrCode, "", RQName, i, "잔고율")))
+
+            print(self.ShinyongInfo)
+
+        # 공매도 현황 조회
+        if RQName == "opt10014_req":
+            cnt = self.GetRepeatCnt(TrCode, RQName)
+            print("opt10014_req count =", cnt)
+            for i in range(cnt):
+                self.GomgmaedoInfo["일자"].append((self.CommGetData(TrCode, "", RQName, i, "일자")))
+                self.GomgmaedoInfo["종가"].append(int(self.CommGetData(TrCode, "", RQName, i, "종가")))
+                self.GomgmaedoInfo["전일대비기호"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비기호")))
+                self.GomgmaedoInfo["전일대비"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비")))
+                self.GomgmaedoInfo["등락율"].append(float(self.CommGetData(TrCode, "", RQName, i, "등락율")))
+                self.GomgmaedoInfo["거래량"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래량")))
+                self.GomgmaedoInfo["공매도량"].append(int(self.CommGetData(TrCode, "", RQName, i, "공매도량")))
+                self.GomgmaedoInfo["매매비중"].append(float(self.CommGetData(TrCode, "", RQName, i, "매매비중")))
+                self.GomgmaedoInfo["공매도거래대금"].append(int(self.CommGetData(TrCode, "", RQName, i, "공매도거래대금")))
+                self.GomgmaedoInfo["공매도평균가"].append(int(self.CommGetData(TrCode, "", RQName, i, "공매도평균가")))
+            print(self.GomgmaedoInfo)
+
         self.tr_event_loop.exit()
+
+
 
     # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
     def OnReceiveRealData(self, sJongmokCode, sRealType, sRealData):
@@ -570,6 +610,36 @@ class KiwoomApi(QAxWidget):
             "종목정보" : [],
             "수정주가이벤트" : [],
             "전일종가" : [] }
+
+        # 신용 / 대주거래 현황
+        self.ShinyongInfo = {
+            "일자" : [],
+            "현재가" : [],
+            "전일대비기호" : [],
+            "전일대비" : [],
+            "거래량" : [],
+            "신규" : [],
+            "상환" : [],
+            "잔고" : [],
+            "금액" : [],
+            "대비" : [],
+            "공여율" : [],
+            "잔고율" : [] }
+
+        # 공매도 추이요청
+        self.GomgmaedoInfo = {
+            "일자" : [],
+            "종가" : [],
+            "전일대비기호" : [],
+            "전일대비" : [],
+            "등락율" : [],
+            "거래량" : [],
+            "공매도량" : [],
+            "매매비중" : [],
+            "공매도거래대금" : [],
+            "공매도평균가" : [] }
+
+
 '''
 FID  설명
 10  현재가, 체결가, 실시간종가

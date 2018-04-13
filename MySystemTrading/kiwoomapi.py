@@ -1,8 +1,8 @@
 import os
 import time
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4.QAxContainer import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QAxContainer import *
 import pandas as pd
 from pandas import Series, DataFrame
 import sqlite3
@@ -11,9 +11,23 @@ class KiwoomApi(QAxWidget):
     def __init__(self):
         super().__init__()
 
-        #self.kiwoom = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
-        #self.kiwoom.connect(self.kiwoom, SIGNAL("OnEventConnect(int)"), self.OnEventConnect)
+        self.kiwoom = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
         self.setControl("KHOPENAPI.KHOpenAPICtrl.1")
+        self.kiwoom.OnEventConnect.connect(self.OnEventConnect)
+
+        # void OnReceiveTrData(LPCTSTR sScrNo, LPCTSTR sRQName, LPCTSTR sTrCode, LPCTSTR sRecordName, LPCTSTR sPreNext, LONG nDataLength, LPCTSTR sErrorCode, LPCTSTR sMessage, LPCTSTR sSplmMsg)
+        self.kiwoom.OnReceiveTrData.connect(self.OnReceiveTrData)
+
+        # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
+        self.kiwoom.OnReceiveRealData.connect(self.OnReceiveRealData)
+
+        # void OnReceiveMsg(LPCTSTR sScrNo, LPCTSTR sRQName, LPCTSTR sTrCode, LPCTSTR sMsg)
+        self.kiwoom.OnReceiveMsg.connect(self.OnReceiveMsg)
+
+        # void OnReceiveChejanData(LPCTSTR sGubun, LONG nItemCnt, LPCTSTR sFidList);
+        self.kiwoom.OnReceiveChejanData.connect(self.OnReceiveChejanData)
+
+
 
         # void OnEventConnect(LONG nErrCode);
         self.connect(self, SIGNAL("OnEventConnect(int)"), self.OnEventConnect)

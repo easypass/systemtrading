@@ -4,21 +4,22 @@ import threading
 import datetime
 import time
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4 import uic
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5 import uic
 
 #from kiwoomapi import *
 import kiwoomapi
 
-import pymysql
+#import pymysql
 import sqlite3
 
 import pandas as pd
 from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import pandas_datareader.data as web
+#import pandas_datareader.data as web
 
 import pywinauto
 import win32com.client as win32
@@ -30,8 +31,8 @@ class DBSync_Threadjobs(threading.Thread):
         pass
 
 
-form_class = uic.loadUiType("D:\workspace\GitHub\systemtrading\MySystemTrading\QtUI\MainUI.ui")[0]
-#form_class = uic.loadUiType("./QtUI/MainUI.ui")[0]
+#form_class = uic.loadUiType("E:\workspace\GitHub\systemtrading\MySystemTrading\QtUI\MainUI.ui")[0]
+form_class = uic.loadUiType("./QtUI/MainUI.ui")[0]
 
 #class MyWindow(QMainWindow):
 class MyWindow(QMainWindow, form_class):

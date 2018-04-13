@@ -1,5 +1,6 @@
 import os
 import time
+import copy
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -8,6 +9,55 @@ from PyQt5.QAxContainer import *
 import pandas as pd
 from pandas import Series, DataFrame
 import sqlite3
+
+# 주식 기본정보 Data
+stockDB_init_dict = { }
+
+stockDB = {}
+stockDB_List = [
+    # opt100001
+    '종목코드', '종목명', '연중최저', '연중최고', '250일최저', '250일최고', '250최저가대비율', '250최고가대비율', '250최저가일', '250최고가일',
+    'PER', 'EPS', 'BPS', 'PBR', 'EV', 'ROE', '시가총액', '상장주식', '시가총액비중', "결산월", "액면가", "자본금", "외진소진률", "매출액",
+    "영업이익", "당기순이익", '신용비율', '상한가', '하한가', '현재가', '액면가단위'
+    # opt10006
+    '시가', '저가', '고가', '종가', '대비', '등락률', '거래량', '거래대금', '체결강도', '회전율',
+    # opt10013 신용매매 (신용,대주)
+    '신용잔고', '신용잔고증감', '신용잔고율', '신용공여율', '대차잔고', '대차잔고증감', '대차잔고율', '대차공여율',
+    # opt10014 공매도 추이
+    '공매도량', '공매도비중', '공매도평균가', '공매도거래대금',
+    # opt10045 기관/외인 매매 추이
+    '기관기간누적', '기관일별순매매수량', '외인기간누적', '외인일별순매매수량', '외인추정평균매수가', '기관추정평균매수가',
+    # opt10061 투자자별 순매수 / 순매도 (금액/수량)
+    '개인', '외국인', '기관', '금융투자', '보험', '투신', '기타금융', '은행', '연기금', '사모펀드', '국가', '기타법인', '내외국인' ,
+    ]
+
+
+# 주식 기본정보 Data
+opt10001_DB = { }
+opt10001_DBList = [
+    "종목코드", "종목명", "결산월", "액면가", "자본금", "상장주식", "신용비율", "연중최고", "연중최저", "시가총액", "시가총액비중",
+    "외진소진률", "대용가", "PER", "EPS", "ROE", "PBR", "EV", "BPS", "매출액", "영업이익", "당기순이익", "250최고", "250최저",
+    "시가", "고가", "저가", "상한가", "하한가", "기준가", "예상체결가", "예상체결수량", "250최고가일", "250최저가일", "250최고가대비율",
+    "250최저가대비율", "현재가", "대비기호", "전일대비", "등락율", "거래량", "거래대비", "액면가단위",  ]
+
+# opt10006_req - 주식 일/시분 정보
+opt10006_DB = { }
+opt10006_DBList = [ "시가", "고가", "저가", "종가", "대비", "등락률", "거래량", "거래대금", "체결강도", ]
+
+opt10013_DB = { }
+opt10013_DBList = [ "신용잔고", "신용잔고증감", "신용잔고율", "신용공여율", "대차잔고", "대차잔고증감", "대차잔고율", "대차공여율", ]
+
+opt10014_DB = { }
+opt10014_DBList = [ "공매도량", "공매도비중", "공매도평균가", "공매도거래대금", ]
+
+# opt10045 기관/외인 매매 추이
+opt10045_DB = { }
+opt10045_DBList = [ "기관기간누적", "기관일별순매매수량", "외인기간누적", "외인일별순매매수량", "외인추정평균매수가", "기관추정평균매수가" ]
+
+# opt10061 투자자별 순매수 / 순매도 (금액/수량)
+opt10061_DB = { }
+opt10061_DBList = [ '개인', '외국인', '기관', '금융투자', '보험', '투신', '기타금융', '은행', '연기금', '사모펀드', '국가', '기타법인', '내외국인' , ]
+
 
 class KiwoomOpenApi(QAxWidget):
     def __init__(self):
@@ -23,16 +73,16 @@ class KiwoomOpenApi(QAxWidget):
         self.handle.OnReceiveTrData.connect(self.OnReceiveTrData)
 
         # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
-        #self.handle.OnReceiveRealData.connect(self.OnReceiveRealData)
+        self.handle.OnReceiveRealData.connect(self.OnReceiveRealData)
 
         # void OnReceiveMsg(LPCTSTR sScrNo, LPCTSTR sRQName, LPCTSTR sTrCode, LPCTSTR sMsg)
-        #self.handle.OnReceiveMsg.connect(self.OnReceiveMsg)
+        self.handle.OnReceiveMsg.connect(self.OnReceiveMsg)
 
         # void OnReceiveChejanData(LPCTSTR sGubun, LONG nItemCnt, LPCTSTR sFidList);
-        #self.handle.OnReceiveChejanData.connect(self.OnReceiveChejanData)
+        self.handle.OnReceiveChejanData.connect(self.OnReceiveChejanData)
 
         self.setControl("KHOPENAPI.KHOpenAPICtrl.1")
-
+        self.InitStockInfo()
 
         '''
         # void OnEventConnect(LONG nErrCode);
@@ -60,55 +110,295 @@ class KiwoomOpenApi(QAxWidget):
             self.connected = False
             print("disconnected")
 
-    #
+    def GetStockInfo(self, reqID) :
+        if(reqID == 'ALL') :
+            return stockDB
+        elif(reqID == 'opt10001') :
+            return opt10001_DB
+        elif(reqID == 'opt10006') :
+            return opt10006_DB
+        elif(reqID == 'opt10013') :
+            return opt10013_DB
+        elif(reqID == 'opt10014') :
+            return opt10014_DB
+        elif(reqID == 'opt10045') :
+            return opt10045_DB
+        elif(reqID == 'opt10061') :
+            return opt10061_DB
+
+    def InitStockInfo(self) :
+        stockDB = { }
+        opt10001_DB = { }
+        opt10006_DB = { }
+        opt10013_DB = { }
+        opt10014_DB = { }
+        opt10045_DB = { }
+        opt10061_DB = { }
+
+
+
+    # Request opt00001 - 기본 정보
+    def request_opt10001_GetStockBasicInfo(self, code) :
+        self.SetInputValue("종목코드", code)
+        self.CommRqData("opt10001_req", "opt10001", "0", "0101")
+
+    # opt10006_req - 주식 일/시분 정보
+    def request_opt10006_GetStockBasicInfo(self, code) :
+        self.SetInputValue("종목코드", code)
+        self.CommRqData("opt10006_req", "opt10006", "0", "0101")
+
+    # opt10013 신용매매 (신용)
+    def request_opt10013_DebtTransactionInfo(self, code, date, mode = 1) :
+        self.SetInputValue("종목코드", code)
+        self.SetInputValue("일자"	,  date);
+        # 조회구분 = 1:융자, 2:대주
+        if(mode != 1) : mode = 2
+        self.SetInputValue("조회구분"	,  str(mode));
+        self.CommRqData("opt10013_req1", "opt10013", "0", "0101")
+
+    # opt10014 공매도 추이
+    def request_opt10014_DebtSellTransactionInfo(self, code, startDate, endDate) :
+        self.SetInputValue("종목코드"	,  code);
+        # 시간구분 = 0:시작일, 1:기간
+        self.SetInputValue("시간구분"	,  '1');
+        self.SetInputValue("시작일자"	,  startDate);
+        self.SetInputValue("종료일자"	,  endDate);
+        self.CommRqData("opt10014_req", "opt10014", "0", "0101")
+
+    # opt10045 기관/외인 매매 추이
+    def request_opt10045_OrgForeignBuynSellInfo(self, code, startDate, endDate, organ = 1, foriegn = 1) :
+        self.SetInputValue("종목코드"	,  code);
+        self.SetInputValue("시작일자"	,  startDate);
+        self.SetInputValue("종료일자"	,  endDate);
+        # 기관추정단가구분 = 1:매수단가, 2:매도단가
+        if(organ != 1) : organ = 2
+        self.SetInputValue("기관추정단가구분"	,  str(organ));
+        # 외인추정단가구분 = 1:매수단가, 2:매도단가
+        if(foriegn != 1) : foriegn = 2
+        self.SetInputValue("외인추정단가구분"	,  str(foriegn));
+        self.CommRqData( "opt10045_req"	,  "opt10045"	,  "0"	,  "0101");
+
+    # opt10061 투자자별 순매수 / 순매도 (금액/수량)
+    def request_opt10061_EachGroupBuynSellInfo(self, code, startDate, endDate, unit = 2, diff = 0, scale = 1) :
+        self.SetInputValue("종목코드"	,  code);
+        self.SetInputValue("시작일자"	,  startDate);
+        self.SetInputValue("종료일자"	,  endDate);
+        # 금액수량구분 = 1:금액, 2:수량
+        if(unit != 1) : unit = 2
+        self.SetInputValue("금액수량구분"	,  str(unit));
+        # 매매구분 = 0:순매수, 1:매수, 2:매도
+        if(diff > 2) : diff = 0
+        self.SetInputValue("매매구분"	,  str(diff));
+        # 단위구분 = 1000:천주, 1:단주
+        if(scale != 1) : scale = 1000
+        self.SetInputValue("단위구분"	,  str(scale));
+        self.CommRqData( "opt10061_req"	,  "opt10061"	,  "0"	,  "0101");
+
+
+    #==================================================================================================================
+    # opt10001_req - 주식 기본정보
+    # self.kiwoom.SetInputValue("종목코드", code)
+    # self.kiwoom.CommRqData("opt10001_req", "opt10001", 0, "0101")
+    #==================================================================================================================
+    def opt10001_GetStockBasicInfo(self, RQName, TrCode) :
+        opt10001_selectionList = [ '종목코드', '종목명', '연중최저', '연중최고', '250최저', '250최고', '250최저가대비율',
+                                    '250최고가대비율', '250최저가일', '250최고가일', 'PER', 'EPS', 'BPS', 'PBR', 'EV', 'ROE',
+                                    '시가총액', '상장주식', '시가총액비중', "결산월", "액면가", "자본금", "외진소진률", "매출액",
+                                    "영업이익", "당기순이익", '신용비율', '상한가', '하한가', '현재가', '액면가단위', ]
+
+        for key in opt10001_DBList :
+            opt10001_DB[key] = (self.CommGetData(TrCode, "", RQName, 0, key))
+
+        for key in opt10001_selectionList :
+            stockDB[key] = self.CommGetData(TrCode, "", RQName, 0, key)
+
+
+    #==================================================================================================================
+    # opt10006_req - 종목별 가격 및 거래량, 등락정보
+    # self.kiwoom.SetInputValue("종목코드", code)
+    # self.kiwoom.CommRqData("opt10006_req", "opt10006", 0, "0101")
+    #==================================================================================================================
+    def opt10006_GetPriceAmounts(self, RQName, TrCode) :
+        # opt10006_req - 주식 일/시분 정보
+        for key in opt10006_DBList :
+            opt10006_DB[key] = self.CommGetData(TrCode, "", RQName, 0, key)
+            stockDB[key] = self.CommGetData(TrCode, "", RQName, 0, key)
+
+    #==================================================================================================================
+    # opt10013 신용매매 (신용,대주) - 지정일로부터 100개 표시
+    # self.kiwoom.SetInputValue("종목코드", code)
+    # self.kiwoom.SetInputValue("일자"	,  "20180412");
+    # self.kiwoom.SetInputValue("조회구분"	,  1); - 조회구분 = 1:융자, 2:대주
+    # self.kiwoom.CommRqData("opt10013_req1", "opt10013", 0, "0101")
+    #==================================================================================================================
+    def opt10013_DebtTransactionInfo(self, RQName, TrCode, getCurrent = True) :
+        querylist = [ "잔고", "대비", "잔고율", "공여율", ]
+        keya = [ "신용잔고", "신용잔고증감", "신용잔고율", "신용공여율", ]
+        keyb = [ "대차잔고", "대차잔고증감", "대차잔고율", "대차공여율", ]
+        cnt = self.GetRepeatCnt(TrCode, RQName)
+        print("opt10013_req1 count =", cnt)
+        if(getCurrent) :
+            if(RQName == 'opt10013_req1'):
+                index = 0
+                for key in keya :
+                    stockDB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                    opt10013_DB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                    index += 1
+            elif(RQName == 'opt10013_req2'):
+                index = 0
+                for key in keyb :
+                    stockDB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                    opt10013_DB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                    index += 1
+            else :
+                pass
+        else :
+            if(RQName == 'opt10013_req1'):
+                index = 0
+                for key in keya :
+                    opt10013_DB[key] = []
+                    for i in range(cnt):
+                        opt10013_DB[key].append(self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                    index += 1
+            elif(RQName == 'opt10013_req2'):
+                index = 0
+                for key in keyb :
+                    opt10013_DB[key] = []
+                    for i in range(cnt):
+                        opt10013_DB[key].append(self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                    index += 1
+            else :
+                pass
+        pass
+
+    #==================================================================================================================
+    # opt10014 공매도 추이 - 지정일로부터 100개 표시
+    # opt10014 공매도 추이
+    # self.kiwoom.SetInputValue("종목코드"	,  code);
+    # 시간구분 = 0:시작일, 1:기간
+    # self.kiwoom.SetInputValue("시간구분"	,  1);
+    # self.kiwoom.SetInputValue("시작일자"	,  '20180412');
+    # self.kiwoom.SetInputValue("종료일자"	,  '20180412');
+    # self.kiwoom.CommRqData("opt10014_req", "opt10014", 0, "0101")
+    #==================================================================================================================
+    def opt10014_DebtSellTransactionInfo(self, RQName, TrCode, getCurrent = True) :
+        querylist = [ "공매도량",  "매매비중", "공매도평균가", "공매도거래대금", ]
+        cnt = self.GetRepeatCnt(TrCode, RQName)
+        print("opt10014_req count =", cnt)
+        index = 0
+        if(getCurrent) :
+            for key in opt10014_DBList :
+                stockDB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                opt10014_DB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                index += 1
+        else :
+            for key in opt10014_DBList :
+                opt10014_DB[key] = []
+                for i in cnt :
+                    opt10014_DB[key].append(self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                index += 1
+        pass
+
+
+    #==================================================================================================================
+    # opt10045 기관/외인 매매 추이
+    # self.kiwoom.SetInputValue("종목코드"	,  code);
+    # self.kiwoom.SetInputValue("시작일자"	,  '20180412');
+    # self.kiwoom.SetInputValue("종료일자"	,  '20180412');
+    # 기관추정단가구분 = 1:매수단가, 2:매도단가
+    # self.kiwoom.SetInputValue("기관추정단가구분"	,  1);
+    # 외인추정단가구분 = 1:매수단가, 2:매도단가
+    # self.kiwoom.SetInputValue("외인추정단가구분"	,  1);
+    # self.kiwoom.CommRqData( "opt10045_req"	,  "opt10045"	,  "0"	,  "0101");
+    #==================================================================================================================
+    def opt10045_OrgForeignBuynSellInfo(self, RQName, TrCode, getCurrent = True) :
+        querylist = [ "기관기간누적",  "기관일별순매매수량", "외인기간누적", "외인일별순매매수량", "외인추정평균가", "기관추정평균가", ]
+        cnt = self.GetRepeatCnt(TrCode, RQName)
+        print("opt10045_req count =", cnt)
+        if(getCurrent) :
+            index = 0
+            for key in opt10045_DBList :
+                stockDB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                opt10045_DB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                index += 1
+        else :
+            index = 0
+            for key in opt10045_DBList :
+                opt10045_DB[key] = []
+                for i in cnt :
+                    opt10045_DB[key].append(self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                index += 1
+        pass
+
+
+    #==================================================================================================================
+    # opt10061 투자자별 순매수 / 순매도 (금액/수량)
+    # self.kiwoom.SetInputValue("종목코드"	,  code);
+    # self.kiwoom.SetInputValue("시작일자"	,  '20180412');
+    # self.kiwoom.SetInputValue("종료일자"	,  '20180412');
+    # 금액수량구분 = 1:금액, 2:수량
+    # self.kiwoom.SetInputValue("금액수량구분"	,  2);
+    # 매매구분 = 0:순매수, 1:매수, 2:매도
+    # self.kiwoom.SetInputValue("매매구분"	,  0);
+    # 단위구분 = 1000:천주, 1:단주
+    # self.kiwoom.SetInputValue("단위구분"	,  1);
+    # self.kiwoom.CommRqData( "opt10061_req"	,  "opt10061"	,  "0"	,  "0101");
+    #==================================================================================================================
+    def opt10061_EachGroupBuynSellInfo(self, RQName, TrCode, getCurrent = True) :
+        querylist = [ "개인투자자",  "외국인투자자", "기관계", "금융투자", "보험", "투신", "기타금융", "은행", "연기금등", "사모펀드", "국가", "기타법인", "내외국인" ]
+        cnt = self.GetRepeatCnt(TrCode, RQName)
+        print("opt10061_req count =", cnt)
+        if(getCurrent) :
+            index = 0
+            for key in opt10061_DBList :
+                stockDB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                opt10061_DB[key] = (self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                index += 1
+        else :
+            index = 0
+            for key in opt10061_DBList :
+                opt10061_DB[key] = []
+                for i in cnt :
+                    opt10061_DB[key].append(self.CommGetData(TrCode, "", RQName, 0, querylist[index]))
+                index += 1
+        pass
+
+
+    #==================================================================================================================
+    # OnReceiveTrData : Transaction Data 수신 처리 함수
+    #==================================================================================================================
     def OnReceiveTrData(self, ScrNo, RQName, TrCode, RecordName, PrevNext, DataLength, ErrorCode, Message, SplmMsg):
         print("OnReceiveTrData", "(", ScrNo, RQName, TrCode, RecordName, PrevNext, DataLength, ErrorCode, Message, SplmMsg, ")")
         self.prev_next = PrevNext
         print("PreNext = ", self.prev_next)
         # opt10001_req - 주식기본정보
         if RQName == "opt10001_req":
-            self.opt10001_data["종목코드"] = self.CommGetData(TrCode, "", RQName, 0, "종목코드")
-            self.opt10001_data["종목명"] = self.CommGetData(TrCode, "", RQName, 0, "종목명")
-            self.opt10001_data["결산월"] = self.CommGetData(TrCode, "", RQName, 0, "결산월")
-            self.opt10001_data["액면가"] = self.CommGetData(TrCode, "", RQName, 0, "액면가")
-            self.opt10001_data["자본금"] = self.CommGetData(TrCode, "", RQName, 0, "자본금")
-            self.opt10001_data["상장주식"] = self.CommGetData(TrCode, "", RQName, 0, "상장주식")
-            self.opt10001_data["신용비율"] = self.CommGetData(TrCode, "", RQName, 0, "신용비율")
-            self.opt10001_data["연중최고"] = self.CommGetData(TrCode, "", RQName, 0, "연중최고")
-            self.opt10001_data["연중최저"] = self.CommGetData(TrCode, "", RQName, 0, "연중최저")
-            self.opt10001_data["시가총액"] = self.CommGetData(TrCode, "", RQName, 0, "시가총액")
-            self.opt10001_data["외진소진률"] = self.CommGetData(TrCode, "", RQName, 0, "외진소진률")
-            self.opt10001_data["대용가"] = self.CommGetData(TrCode, "", RQName, 0, "대용가")
-            self.opt10001_data["PER"] = self.CommGetData(TrCode, "", RQName, 0, "PER")
-            self.opt10001_data["EPS"] = self.CommGetData(TrCode, "", RQName, 0, "EPS")
-            self.opt10001_data["ROE"] = self.CommGetData(TrCode, "", RQName, 0, "ROE")
-            self.opt10001_data["PBR"] = self.CommGetData(TrCode, "", RQName, 0, "PBR")
-            self.opt10001_data["EV"] = self.CommGetData(TrCode, "", RQName, 0, "EV")
-            self.opt10001_data["BPS"] = self.CommGetData(TrCode, "", RQName, 0, "BPS")
-            self.opt10001_data["매출액"] = self.CommGetData(TrCode, "", RQName, 0, "매출액")
-            self.opt10001_data["영업이익"] = self.CommGetData(TrCode, "", RQName, 0, "영업이익")
-            self.opt10001_data["당기순이익"] = self.CommGetData(TrCode, "", RQName, 0, "당기순이익")
-            self.opt10001_data["250최고"] = self.CommGetData(TrCode, "", RQName, 0, "250최고")
-            self.opt10001_data["250최저"] = self.CommGetData(TrCode, "", RQName, 0, "250최저")
-            self.opt10001_data["시가"] = self.CommGetData(TrCode, "", RQName, 0, "시가")
-            self.opt10001_data["고가"] = self.CommGetData(TrCode, "", RQName, 0, "고가")
-            self.opt10001_data["저가"] = self.CommGetData(TrCode, "", RQName, 0, "저가")
-            self.opt10001_data["상한가"] = self.CommGetData(TrCode, "", RQName, 0, "상한가")
-            self.opt10001_data["하한가"] = self.CommGetData(TrCode, "", RQName, 0, "하한가")
-            self.opt10001_data["기준가"] = self.CommGetData(TrCode, "", RQName, 0, "기준가")
-            self.opt10001_data["예상체결가"] = self.CommGetData(TrCode, "", RQName, 0, "예상체결가")
-            self.opt10001_data["예상체결수량"] = self.CommGetData(TrCode, "", RQName, 0, "예상체결수량")
-            self.opt10001_data["250최고가일"] = self.CommGetData(TrCode, "", RQName, 0, "250최고가일")
-            self.opt10001_data["250최저가일"] = self.CommGetData(TrCode, "", RQName, 0, "250최저가일")
-            self.opt10001_data["250최고가대비율"] = self.CommGetData(TrCode, "", RQName, 0, "250최고가대비율")
-            self.opt10001_data["현재가"] = self.CommGetData(TrCode, "", RQName, 0, "현재가")
-            self.opt10001_data["대비기호"] = self.CommGetData(TrCode, "", RQName, 0, "대비기호")
-            self.opt10001_data["전일대비"] = self.CommGetData(TrCode, "", RQName, 0, "전일대비")
-            self.opt10001_data["등락율"] = self.CommGetData(TrCode, "", RQName, 0, "등락율")
-            self.opt10001_data["거래량"] = self.CommGetData(TrCode, "", RQName, 0, "거래량")
-            self.opt10001_data["거래대비"] = self.CommGetData(TrCode, "", RQName, 0, "거래대비")
-            self.opt10001_data["액면가단위"] = self.CommGetData(TrCode, "", RQName, 0, "액면가단위")
-            print(self.opt10001_data)
+            self.opt10001_GetStockBasicInfo(RQName, TrCode)
+            pass
+
+        # opt10006_req - 종목별 가격 및 거래량, 등락정보
+        if RQName == "opt10006_req":
+            self.opt10006_GetPriceAmounts(RQName, TrCode)
+            pass
+
+        # opt10013 신용매매 (신용,대주) - 지정일로부터 100개 표시
+        if RQName == "opt10013_req1" or RQName == "opt10013_req2":
+            self.opt10013_DebtTransactionInfo(RQName, TrCode, True)
+            pass
+
+        # opt10014 공매도 추이
+        if RQName == "opt10014_req":
+            self.opt10014_DebtSellTransactionInfo(RQName, TrCode, True)
+            pass
+
+        # opt10045 기관/외인 매매 추이
+        if RQName == "opt10045_req":
+            self.opt10045_OrgForeignBuynSellInfo(RQName, TrCode, True)
+            pass
+
+        # opt10061 투자자별 순매수 / 순매도 (금액/수량)
+        if RQName == "opt10061_req":
+            self.opt10061_EachGroupBuynSellInfo(RQName, TrCode, True)
             pass
 
         # 예수금 현황 상세 정보 요청 : 예수금 현황
@@ -197,47 +487,8 @@ class KiwoomOpenApi(QAxWidget):
                 data.append(earning_rate)
                 self.data_opw00018['multi'].append(data)
 
-
-        # 융자(1) / 대주(2) 현황 조회
-        if RQName == "opt10013_req":
-            cnt = self.GetRepeatCnt(TrCode, RQName)
-            print("opt10013_req count =", cnt)
-            for i in range(cnt):
-                self.ShinyongInfo["일자"].append((self.CommGetData(TrCode, "", RQName, i, "일자")))
-                self.ShinyongInfo["현재가"].append(int(self.CommGetData(TrCode, "", RQName, i, "현재가")))
-                self.ShinyongInfo["전일대비기호"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비기호")))
-                self.ShinyongInfo["전일대비"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비")))
-                self.ShinyongInfo["거래량"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래량")))
-                self.ShinyongInfo["신규"].append(int(self.CommGetData(TrCode, "", RQName, i, "신규")))
-                self.ShinyongInfo["상환"].append(int(self.CommGetData(TrCode, "", RQName, i, "상환")))
-                self.ShinyongInfo["잔고"].append(int(self.CommGetData(TrCode, "", RQName, i, "잔고")))
-                self.ShinyongInfo["금액"].append(int(self.CommGetData(TrCode, "", RQName, i, "금액")))
-                self.ShinyongInfo["대비"].append(int(self.CommGetData(TrCode, "", RQName, i, "대비")))
-                self.ShinyongInfo["공여율"].append(float(self.CommGetData(TrCode, "", RQName, i, "공여율")))
-                self.ShinyongInfo["잔고율"].append(float(self.CommGetData(TrCode, "", RQName, i, "잔고율")))
-
-            print(self.ShinyongInfo)
-
-        # 공매도 현황 조회
-        if RQName == "opt10014_req":
-            cnt = self.GetRepeatCnt(TrCode, RQName)
-            print("opt10014_req count =", cnt)
-            for i in range(cnt):
-                self.GomgmaedoInfo["일자"].append((self.CommGetData(TrCode, "", RQName, i, "일자")))
-                self.GomgmaedoInfo["종가"].append(int(self.CommGetData(TrCode, "", RQName, i, "종가")))
-                self.GomgmaedoInfo["전일대비기호"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비기호")))
-                self.GomgmaedoInfo["전일대비"].append(int(self.CommGetData(TrCode, "", RQName, i, "전일대비")))
-                self.GomgmaedoInfo["등락율"].append(float(self.CommGetData(TrCode, "", RQName, i, "등락율")))
-                self.GomgmaedoInfo["거래량"].append(int(self.CommGetData(TrCode, "", RQName, i, "거래량")))
-                self.GomgmaedoInfo["공매도량"].append(int(self.CommGetData(TrCode, "", RQName, i, "공매도량")))
-                self.GomgmaedoInfo["매매비중"].append(float(self.CommGetData(TrCode, "", RQName, i, "매매비중")))
-                self.GomgmaedoInfo["공매도거래대금"].append(int(self.CommGetData(TrCode, "", RQName, i, "공매도거래대금")))
-                self.GomgmaedoInfo["공매도평균가"].append(int(self.CommGetData(TrCode, "", RQName, i, "공매도평균가")))
-            print(self.GomgmaedoInfo)
-
         self.tr_event_loop.exit()
-
-
+        pass
 
     # void OnReceiveRealData(LPCTSTR sJongmokCode, LPCTSTR sRealType, LPCTSTR sRealData)
     def OnReceiveRealData(self, sJongmokCode, sRealType, sRealData):
@@ -284,7 +535,7 @@ class KiwoomOpenApi(QAxWidget):
             print("unknown realtype.............")
 
         if self.index >= 5 :
-            filePathName = "E:/workspace/GitHub/systemtrading/MySystemTrading/kospi_"+sJongmokCode+".db"
+            filePathName = "E:/workspace/GitHub/systemtrading/MySystemTrading/stockDB_"+sJongmokCode+".db"
             self.saveRealDataToDB(sJongmokCode, filePathName)
             self.Init_RealType_Data()
 
@@ -419,6 +670,19 @@ class KiwoomOpenApi(QAxWidget):
         ret = self.handle.dynamicCall(cmd)
         return ret
 
+    # 업종코드 List 얻어오기
+    def GetThemeGroupList(self, nType) :
+        cmd = 'GetThemeGroupList("%s")' % nType
+        ret = self.handle.dynamicCall(cmd)
+        return ret
+
+    # 업종코드 List 얻어오기
+    def GetThemeGroupCode(self, nType) :
+        cmd = 'GetThemeGroupCode("%s")' % nType
+        ret = self.handle.dynamicCall(cmd)
+        return ret
+
+
     #
     def GetChejanData(self, nFid):
         cmd = 'GetChejanData("%s")' % nFid
@@ -446,6 +710,15 @@ class KiwoomOpenApi(QAxWidget):
     def SetRealRemove(self, sScrNo, sDelCode):
         ret = self.handle.dynamicCall("SetRealRemove(QString, QString)", sScrNo, sDelCode)
         return ret
+
+    # 화면내 모든 Real Data 요청 제거
+    # sScrNo : Screen 번호
+    def DisconnectRealData(self, sScrNo):
+        self.handle.dynamicCall("DisconnectRealData(QString)", sScrNo)
+
+
+
+
 
     #
     def InitOHLCRawData(self):
@@ -479,98 +752,7 @@ class KiwoomOpenApi(QAxWidget):
             "매도호가총잔량" : [],
             "매수호가총잔량" : [] }
 
-        # 주식 기본정보 Data
-        self.opt10001_data = {
-            "종목코드" : '',
-            "종목명" : '',
-            "결산월" : '',
-            "액면가" : '',
-            "자본금" : '',
-            "상장주식" : '',
-            "신용비율" : '',
-            "연중최고" : '',
-            "연중최저" : '',
-            "시가총액" : '',
-            "시가총액비중" : '',
-            "외진소진률" : '',
-            "대용가" : '',
-            "PER" : '',
-            "EPS" : '',
-            "ROE" : '',
-            "PBR" : '',
-            "EV" : '',
-            "BPS" : '',
-            "매출액" : '',
-            "영업이익" : '',
-            "당기순이익" : '',
-            "250최고" : '',
-            "250최저" : '',
-            "시가" : '',
-            "고가" : '',
-            "저가" : '',
-            "상한가" : '',
-            "하한가" : '',
-            "기준가" : '',
-            "예상체결가" : '',
-            "예상체결수량" : '',
-            "250최고가일" : '',
-            "250최저가일" : '',
-            "250최고가대비율" : '',
-            "250최저가대비율" : '',
-            "현재가" : '',
-            "대비기호" : '',
-            "전일대비" : '',
-            "등락율" : '',
-            "거래량" : '',
-            "거래대비" : '',
-            "액면가단위" : '' }
-        '''
-        # 주식 기본정보 Data
-        self.opt10001_data = {
-            "종목코드" : [],
-            "종목명" : [],
-            "결산월" : [],
-            "액면가" : [],
-            "자본금" : [],
-            "상장주식" : [],
-            "신용비율" : [],
-            "연중최고" : [],
-            "연중최저" : [],
-            "시가총액" : [],
-            "시가총액비중" : [],
-            "외진소진률" : [],
-            "대용가" : [],
-            "PER" : [],
-            "EPS" : [],
-            "ROE" : [],
-            "PBR" : [],
-            "EV" : [],
-            "BPS" : [],
-            "매출액" : [],
-            "영업이익" : [],
-            "당기순이익" : [],
-            "250최고" : [],
-            "250최저" : [],
-            "시가" : [],
-            "고가" : [],
-            "저가" : [],
-            "상한가" : [],
-            "하한가" : [],
-            "기준가" : [],
-            "예상체결가" : [],
-            "예상체결수량" : [],
-            "250최고가일" : [],
-            "250최저가일" : [],
-            "250최고가대비율" : [],
-            "250최저가대비율" : [],
-            "현재가" : [],
-            "대비기호" : [],
-            "전일대비" : [],
-            "등락율" : [],
-            "거래량" : [],
-            "거래대비" : [],
-            "액면가단위" : [] }
-        '''
+
         # 주식 일봉 차트 조회
         self.DailyChartInfo = {
             "종목코드" : [],
@@ -616,48 +798,3 @@ class KiwoomOpenApi(QAxWidget):
             "매매비중" : [],
             "공매도거래대금" : [],
             "공매도평균가" : [] }
-
-
-'''
-FID  설명
-10  현재가, 체결가, 실시간종가
-11  전일 대비
-12  등락율
-27  (최우선)매도호가
-28  (최우선)매수호가
-13  누적거래량, 누적첵ㄹ량
-14  누적거래대금
-16  시가
-17  고가
-18  저가
-25  전일대비기호
-26  전일거래량 대비(계약,주)
-29  거래대금 증감
-30  전일거래량 대비(비율)
-31  거래회전율
-32  거래비용
-311 시가총액(억)
-
-20  체결시간 (HHMMSS)
-10  현재가, 체결가, 실시간종가
-11  전일 대비
-12  등락율
-27  (최우선)매도호가
-28  (최우선)매수호가
-15  거래량, 체결량
-13  누적거래량, 누적체결량
-14  누적거래대금
-16  시가
-17  고가
-18  저가
-25  전일대비 기호
-26  전일거래량 대비(계약, 주)
-29  거래대금 증감
-30  전일거래량 대비(비율)
-31  거래회전율
-32  거래비용
-228 체결강도
-311 시가총액(억)
-290 장구분
-691 K,O 접근도 (ELW조기종료발생 기준가격, 지수)
-'''

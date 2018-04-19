@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>809</width>
-    <height>106</height>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,8 +30,8 @@
    <widget class="QPushButton" name="SaveStockInfoBtn">
     <property name="geometry">
      <rect>
-      <x>474</x>
-      <y>20</y>
+      <x>20</x>
+      <y>390</y>
       <width>191</width>
       <height>23</height>
      </rect>
@@ -51,6 +51,149 @@
     </property>
     <property name="text">
      <string>실시간 조회</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>90</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>테마 그룹 List 얻어오기</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn3">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>120</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>테마 그룹에 속하는 종목 얻어오기</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn4">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>150</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>증시 거래일 얻어오기 (기간지정)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn5">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>180</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>주식 기본정보</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn6">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>210</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>주식 일시분 정보</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn7">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>240</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>신용매매 정보</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn8">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>270</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>공매도 추이</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn9">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>300</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>외인 기관 매매추이</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn10">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>330</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>투자자별 순매수 순매도</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn11">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>360</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>실시간 정보 얻어오기</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Btn1">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>60</y>
+      <width>191</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>시장별 종목코드 List 얻기</string>
     </property>
    </widget>
   </widget>

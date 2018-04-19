@@ -58,6 +58,8 @@ opt10045_DBList = [ "기관기간누적", "기관일별순매매수량", "외인
 opt10061_DB = { }
 opt10061_DBList = [ '개인', '외국인', '기관', '금융투자', '보험', '투신', '기타금융', '은행', '연기금', '사모펀드', '국가', '기타법인', '내외국인' , ]
 
+opt10081_DB = []
+
 
 class KiwoomOpenApi(QAxWidget):
     def __init__(self):
@@ -125,6 +127,9 @@ class KiwoomOpenApi(QAxWidget):
             return opt10045_DB
         elif(reqID == 'opt10061') :
             return opt10061_DB
+        elif(reqID == 'opt10081') :
+            return opt10081_DB
+            return
 
     def InitStockInfo(self) :
         stockDB = { }
@@ -134,6 +139,7 @@ class KiwoomOpenApi(QAxWidget):
         opt10014_DB = { }
         opt10045_DB = { }
         opt10061_DB = { }
+        opt10081_DB = [ ]
 
 
 
@@ -194,6 +200,14 @@ class KiwoomOpenApi(QAxWidget):
         self.SetInputValue("단위구분"	,  str(scale));
         self.CommRqData( "opt10061_req"	,  "opt10061"	,  "0"	,  "0101");
 
+    # Get Daily Chart Info
+    #수정주가구분 = 0 or 1, 수신데이터 1:유상증자, 2:무상증자, 4:배당락, 8:액면분할, 16:액면병합, 32:기업합병, 64:감자, 256:권리락
+    def request_opt10081_GetDailyChartInfo(self, code, startDate) :
+        self.SetInputValue("종목코드"	,  code);
+        self.SetInputValue("기준일자"	,  startDate);
+        self.SetInputValue("수정주가구분"	,  0);
+        self.CommRqData("opt10081_req1", "opt10081", 0, "0101")
+        #self.CommRqData("opt10081_req2", "opt10081", 0, "0101")
 
     #==================================================================================================================
     # opt10001_req - 주식 기본정보
@@ -364,6 +378,18 @@ class KiwoomOpenApi(QAxWidget):
         pass
 
 
+
+    #==================================================================================================================
+    # opt10081 Get Daily Chart Info
+    #==================================================================================================================
+    def opt10081_GetDailyChartInfo(self, RQName, TrCode) :
+        colName = ['종목코드', '현재가', '거래량', '거래대금', '일자', '시가', '고가', '저가',
+                   '수정주가구분', '수정비율', '대업종구분', '소업종구분', '종목정보', '수정주가이벤트', '전일종가']
+        cnt = self.GetRepeatCnt(TrCode, RQName)
+        print("opt10081_req count =", cnt)
+        global opt10081_DB
+        opt10081_DB = self.GetCommDataEx(TrCode, "주식일봉차트조회")
+        pass
     #==================================================================================================================
     # OnReceiveTrData : Transaction Data 수신 처리 함수
     #==================================================================================================================
@@ -401,14 +427,21 @@ class KiwoomOpenApi(QAxWidget):
             self.opt10061_EachGroupBuynSellInfo(RQName, TrCode, True)
             pass
 
+
+
         # 예수금 현황 상세 정보 요청 : 예수금 현황
         if RQName == "opw00001_req":
             estimated_day2_deposit = self.CommGetData(TrCode, "", RQName, 0, "d+2추정예수금")
             estimated_day2_deposit = self.change_format(estimated_day2_deposit)
             self.data_opw00001 = estimated_day2_deposit
 
-        # 주식 일봉챠트 조회
-        if RQName == "opt10081_req":
+        # opt10081 Get Daily Chart Info
+        if RQName == "opt10081_req1":
+            self.opt10081_GetDailyChartInfo(RQName, TrCode)
+            pass
+
+        # opt10081 Get Daily Chart Info
+        if RQName == "opt10081_req2":
             cnt = self.GetRepeatCnt(TrCode, RQName)
             for i in range(cnt):
                 if i == 0 :
@@ -639,6 +672,11 @@ class KiwoomOpenApi(QAxWidget):
                                 nIndex, sItemName)
         return data.strip()
 
+    def GetCommDataEx(self, sTrCode, sRecordName):
+        data = self.handle.dynamicCall("GetCommDataEx(QString, QString)", sTrCode, sRecordName)
+        return data
+
+
     # 확인 필요...
     def GetCommRealData(self, sRealType, nFid):
         data = self.handle.dynamicCall("GetCommRealData(QString, long)", sRealType, nFid)
@@ -715,8 +753,6 @@ class KiwoomOpenApi(QAxWidget):
     # sScrNo : Screen 번호
     def DisconnectRealData(self, sScrNo):
         self.handle.dynamicCall("DisconnectRealData(QString)", sScrNo)
-
-
 
 
 

@@ -565,13 +565,16 @@ class KiwoomOpenApi(QAxWidget):
                 self.RealStockInfo["매수호가총잔량"].append(buytotal)
             '''
         else :
-            print("unknown realtype.............")
+            print("unknown realtype.............Realtype = {0}".format(sRealType))
+            self.data = sRealData.split('\t')
+            print(self.data)
 
+        '''
         if self.index >= 5 :
             filePathName = "E:/workspace/GitHub/systemtrading/MySystemTrading/stockDB_"+sJongmokCode+".db"
             self.saveRealDataToDB(sJongmokCode, filePathName)
             self.Init_RealType_Data()
-
+        '''
 
     def saveRealDataToDB(self, code, filePathName):
         con = sqlite3.connect(filePathName)

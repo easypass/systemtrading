@@ -33,16 +33,16 @@ class MyWindow(QMainWindow, form_class):
         self.SaveStockInfoBtn.clicked.connect(self.SaveStockInfo)
         self.Btn1.clicked.connect(self.getStockCodeList)
         self.Btn2.clicked.connect(self.getThemeGroupList)
-        self.Btn3.clicked.connect(self.getThemeGroupList)
+        self.Btn3.clicked.connect(self.getThemeGroupCode)
         self.Btn4.clicked.connect(self.getWorkingDateList)
         self.Btn5.clicked.connect(self.getBasicInfo)
         self.Btn6.clicked.connect(self.getDailyStockInfo)
 
-        self.Btn7.clicked.connect(self.getWorkingDateList)
-        self.Btn8.clicked.connect(self.getWorkingDateList)
-        self.Btn9.clicked.connect(self.getWorkingDateList)
-        self.Btn10.clicked.connect(self.getWorkingDateList)
-        self.Btn11.clicked.connect(self.getWorkingDateList)
+        self.Btn7.clicked.connect(self.getTrustTrading)
+        self.Btn8.clicked.connect(self.getDebtSelling)
+        self.Btn9.clicked.connect(self.OrgForeignBuynSellInfo)
+        self.Btn10.clicked.connect(self.EachGroupByunSellInfo)
+        self.Btn11.clicked.connect(self.setRealData)
 
 
     def setRealData(self) :
